@@ -1,0 +1,17 @@
+.git/
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.secrets/
+.terraform/
+docker_volumes/
+*.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.db
+*.db-shm
+*.db-wal

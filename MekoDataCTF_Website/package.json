@@ -1,0 +1,28 @@
+{
+  "name": "mekodatactf-website",
+  "version": "1.0.0",
+  "description": "Website giới thiệu và đăng ký cuộc thi MekoDataCTF",
+  "main": "app.js",
+  "private": true,
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "seed": "node scripts/seed.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.4.1",
+    "better-sqlite3-session-store": "^0.1.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0"
+  }
+}

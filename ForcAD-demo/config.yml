@@ -1,0 +1,55 @@
+admin:
+  password: 69d9b5157d3355ee
+  username: forcad
+game:
+  checkers_path: /checkers/
+  default_score: 2500.0
+  env_path: ''
+  flag_lifetime: 5
+  game_hardness: 10.0
+  inflation: true
+  mode: classic
+  round_time: 60
+  start_time: 2026-10-27 15:52:03
+  timezone: Asia/Ho_Chi_Minh
+  volga_attacks_mode: false
+storages:
+  db:
+    dbname: forcad
+    host: postgres
+    password: 69d9b5157d3355ee
+    port: 5432
+    user: forcad
+  rabbitmq:
+    host: rabbitmq
+    password: 69d9b5157d3355ee
+    port: 5672
+    user: forcad
+    vhost: forcad
+  redis:
+    db: 0
+    host: redis
+    password: 69d9b5157d3355ee
+    port: 6379
+tasks:
+- checker: test_service/checker.py
+  checker_timeout: 10
+  checker_type: hackerdom
+  gets: 2
+  name: test_basic_service
+  places: 5
+  puts: 2
+- checker: test_service/gevent_checker.py
+  checker_timeout: 10
+  checker_type: gevent
+  gets: 2
+  name: test_gevent_service_1
+  places: 5
+  puts: 2
+teams:
+- highlighted: false
+  ip: 192.168.1.2
+  name: Team 1
+- highlighted: true
+  ip: 192.168.1.3
+  name: Team 2 (highlighted)

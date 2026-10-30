@@ -1,0 +1,9 @@
+{
+  "targets": [
+    {"name": "attacker1", "url": "http://10.80.0.11", "kind": "identity", "expected_node": "attacker1"},
+    {"name": "attacker2", "url": "http://10.80.0.12", "kind": "identity", "expected_node": "attacker2"},
+    {"name": "attacker3", "url": "http://10.80.0.13", "kind": "identity", "expected_node": "attacker3"},
+    {"name": "attacker4", "url": "http://10.80.0.14", "kind": "identity", "expected_node": "attacker4"},
+    {"name": "servicedesk", "url": "http://10.80.0.20", "kind": "servicedesk", "password_env": "CHECKER_SERVER_PASSWORD"}
+  ]
+}

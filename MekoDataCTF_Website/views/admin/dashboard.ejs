@@ -1,0 +1,44 @@
+<section class="section">
+  <div class="container">
+    <h1><%= t('admin.title') %></h1>
+    <%- include('../partials/admin-nav') %>
+
+    <div class="stats">
+      <div class="stat card"><span class="stat-value mono"><%= stats.teams %></span><span class="stat-label"><%= t('admin.totalTeams') %></span></div>
+      <div class="stat card"><span class="stat-value mono"><%= stats.members %></span><span class="stat-label"><%= t('admin.totalMembers') %></span></div>
+      <div class="stat card"><span class="stat-value mono"><%= stats.accounts %></span><span class="stat-label"><%= t('admin.totalAccounts') %></span></div>
+      <div class="stat card">
+        <span class="badge <%= registrationOpen ? 'badge-ok' : 'badge-off' %>"><%= registrationOpen ? t('home.registrationOpen') : t('home.registrationClosed') %></span>
+        <span class="stat-label"><%= t('admin.registrationStatus') %></span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3><%= t('admin.schedule') %></h3>
+        <dl class="details">
+          <dt><%= t('admin.registrationDeadline') %></dt><dd class="mono"><%= formatDateTime(settings.registration_deadline, lang) %></dd>
+          <dt><%= t('admin.contestStart') %></dt><dd class="mono"><%= formatDateTime(settings.contest_start, lang) %></dd>
+          <dt><%= t('admin.contestEnd') %></dt><dd class="mono"><%= formatDateTime(settings.contest_end, lang) %></dd>
+        </dl>
+        <a href="/admin/schedule" class="btn btn-outline btn-sm"><%= t('team.edit') %></a>
+      </div>
+      <div class="card">
+        <h3><%= t('admin.teams') %></h3>
+        <div class="export-actions">
+          <a href="/admin/export.xlsx" class="btn btn-primary"><%= t('admin.exportXlsx') %></a>
+          <a href="/admin/export.csv" class="btn btn-outline"><%= t('admin.exportCsv') %></a>
+        </div>
+        <% if (recentTeams.length) { %>
+          <ul class="simple-list">
+            <% recentTeams.forEach(function (tm) { %>
+              <li><a href="/admin/teams/<%= tm.id %>"><%= tm.name %></a> <span class="muted">· <%= tm.member_count %> · <%= tm.email %></span></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="muted"><%= t('admin.noTeams') %></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>

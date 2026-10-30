@@ -1,0 +1,16 @@
+.DS_Store
+.idea
+
+/front/node_modules
+
+/control.py
+/README.md
+.mypy_cache
+/cli
+/docker_volumes
+/deploy
+checkers/round1/rpc
+checkers/mekodata_bridge/collector.lock
+checkers/mekodata_bridge/latest.json
+checkers/mekodata_bridge/request.json
+checkers/mekodata_bridge/responses

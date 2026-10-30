@@ -1,0 +1,81 @@
+Host 10.32.8.175
+    HostName 10.32.8.175
+    User default-p0000000101
+    Port 22
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host man 192.168.64.223
+    HostName 192.168.64.223
+    User ubuntu
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump default-p0000000101@10.32.8.175
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host attacker1 192.168.129.39
+    HostName 192.168.129.39
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host attacker2 192.168.129.248
+    HostName 192.168.129.248
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host attacker3 192.168.130.114
+    HostName 192.168.130.114
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host attacker4 192.168.130.74
+    HostName 192.168.130.74
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host server 192.168.129.12
+    HostName 192.168.129.12
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host checker 192.168.131.76
+    HostName 192.168.131.76
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+
+Host gateway 192.168.131.41
+    HostName 192.168.131.41
+    User debian
+    IdentityFile "C:/Users/Nguyen Thanh Dat/Downloads/management-ssh-access (1)/pool-id-101-management-key"
+    ProxyJump ubuntu@man
+    UserKnownHostsFile "C:/Users/Nguyen Thanh Dat/Documents/ChatGPT/LUAN VAN TOT NGHIEP/pool101-known-hosts"
+    IdentitiesOnly True
+    StrictHostKeyChecking accept-new
+

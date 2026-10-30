@@ -1,0 +1,8 @@
+{
+  "targets": [
+    {"name": "team01", "url": "http://10.80.0.11:8080", "kind": "servicedesk", "password_env": "CHECKER_TEAM01_PASSWORD"},
+    {"name": "team02", "url": "http://10.80.0.12:8080", "kind": "servicedesk", "password_env": "CHECKER_TEAM02_PASSWORD"},
+    {"name": "team03", "url": "http://10.80.0.13:8080", "kind": "servicedesk", "password_env": "CHECKER_TEAM03_PASSWORD"},
+    {"name": "team04", "url": "http://10.80.0.14:8080", "kind": "servicedesk", "password_env": "CHECKER_TEAM04_PASSWORD"}
+  ]
+}

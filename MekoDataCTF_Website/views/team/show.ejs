@@ -1,0 +1,27 @@
+<section class="section">
+  <div class="container narrow">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <p class="section-kicker mono">team</p>
+          <h1><%= team.name %></h1>
+        </div>
+        <% if (canEdit) { %>
+          <a href="/team/edit" class="btn btn-primary"><%= t('team.edit') %></a>
+        <% } %>
+      </div>
+
+      <% if (!canEdit) { %><div class="alert alert-warning"><%= t('team.locked') %></div><% } %>
+
+      <dl class="details">
+        <dt><%= t('team.email') %></dt><dd><%= user.email %></dd>
+        <dt><%= t('team.school') %></dt><dd><%= team.school || '—' %></dd>
+        <dt><%= t('team.phone') %></dt><dd><%= team.phone || '—' %></dd>
+        <dt><%= t('team.registeredAt') %></dt><dd class="mono"><%= team.created_at %> UTC</dd>
+      </dl>
+
+      <h2 class="form-section-title"><%= t('team.members') %> (<%= team.members.length %>)</h2>
+      <%- include('../partials/members-table', { members: team.members }) %>
+    </div>
+  </div>
+</section>

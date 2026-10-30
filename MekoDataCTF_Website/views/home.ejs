@@ -1,0 +1,102 @@
+<section class="hero">
+  <div class="container hero-inner">
+    <p class="hero-kicker mono">&gt; Can Tho University · <%= new Date(settings.contest_start).getFullYear() || '' %></p>
+    <h1 class="hero-title">Meko<span>Data</span>CTF</h1>
+    <% if (content.hero.title) { %><p class="hero-subtitle"><%= content.hero.title %></p><% } %>
+    <div class="hero-body"><%- renderBody(content.hero.body) %></div>
+
+    <div class="hero-actions">
+      <% if (user && user.role === 'admin') { %>
+        <a href="/admin" class="btn btn-primary btn-lg"><%= t('nav.admin') %></a>
+      <% } else if (user) { %>
+        <a href="<%= hasTeam ? '/team' : '/team/edit' %>" class="btn btn-primary btn-lg"><%= t('home.manageTeam') %></a>
+      <% } else if (registrationOpen) { %>
+        <a href="/register" class="btn btn-primary btn-lg"><%= t('home.registerNow') %></a>
+      <% } %>
+      <a href="#about" class="btn btn-outline btn-lg"><%= t('home.learnMore') %></a>
+    </div>
+
+    <%- include('partials/countdown') %>
+  </div>
+  <div class="hero-wave" aria-hidden="true"></div>
+</section>
+
+<section id="about" class="section">
+  <div class="container two-col">
+    <div>
+      <p class="section-kicker mono">01 / about</p>
+      <h2><%= content.about.title %></h2>
+      <div class="prose"><%- renderBody(content.about.body) %></div>
+    </div>
+    <div class="card card-glass">
+      <p class="section-kicker mono">02 / format</p>
+      <h3><%= content.format.title %></h3>
+      <div class="prose"><%- renderBody(content.format.body) %></div>
+    </div>
+  </div>
+</section>
+
+<section id="schedule" class="section section-alt">
+  <div class="container">
+    <p class="section-kicker mono">03 / schedule</p>
+    <h2><%= t('home.scheduleTitle') %></h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <span class="timeline-dot"></span>
+        <h4><%= t('home.registrationDeadline') %></h4>
+        <p class="mono"><%= formatDateTime(settings.registration_deadline, lang) %></p>
+        <span class="badge <%= registrationOpen ? 'badge-ok' : 'badge-off' %>">
+          <%= registrationOpen ? t('home.registrationOpen') : t('home.registrationClosed') %>
+        </span>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-dot"></span>
+        <h4><%= t('home.contestStart') %></h4>
+        <p class="mono"><%= formatDateTime(settings.contest_start, lang) %></p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-dot"></span>
+        <h4><%= t('home.contestEnd') %></h4>
+        <p class="mono"><%= formatDateTime(settings.contest_end, lang) %></p>
+      </div>
+    </div>
+    <div class="info-row">
+      <p><strong><%= t('home.location') %>:</strong> <%= settings.event_location %></p>
+      <p><strong><%= t('team.members') %>:</strong> <%= t('home.teamSize', { min: settings.min_members, max: settings.max_members }) %></p>
+    </div>
+  </div>
+</section>
+
+<section id="rules" class="section">
+  <div class="container narrow">
+    <p class="section-kicker mono">04 / rules</p>
+    <h2><%= content.rules.title %></h2>
+    <div class="prose"><%- renderBody(content.rules.body) %></div>
+  </div>
+</section>
+
+<section id="prizes" class="section section-alt">
+  <div class="container narrow">
+    <p class="section-kicker mono">05 / prizes</p>
+    <h2><%= content.prizes.title %></h2>
+    <div class="prose prose-prizes"><%- renderBody(content.prizes.body) %></div>
+  </div>
+</section>
+
+<section id="faq" class="section">
+  <div class="container narrow">
+    <p class="section-kicker mono">06 / faq</p>
+    <h2><%= content.faq.title %></h2>
+    <div class="prose faq"><%- renderBody(content.faq.body) %></div>
+  </div>
+</section>
+
+<section id="contact" class="section section-cta">
+  <div class="container narrow center">
+    <h2><%= content.contact.title %></h2>
+    <div class="prose"><%- renderBody(content.contact.body) %></div>
+    <% if (!user && registrationOpen) { %>
+      <a href="/register" class="btn btn-primary btn-lg"><%= t('home.registerNow') %></a>
+    <% } %>
+  </div>
+</section>

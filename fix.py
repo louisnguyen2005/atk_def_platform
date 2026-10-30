@@ -1,0 +1,1 @@
+p='build_document.py';s=open(p,encoding='utf-8-sig').read();s=s.replace("'Wingdings' if f=='bullet' else 'Times New Roman'","({'\uf02d':'Symbol','\uf0b7':'Symbol','\uf080':'Webdings','\uf0af':'Webdings','\uf0ff':'Webdings'}.get(t,'Wingdings')) if f=='bullet' else 'Times New Roman'");open(p,'w',encoding='utf-8').write(s)

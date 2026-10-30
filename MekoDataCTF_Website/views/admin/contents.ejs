@@ -1,0 +1,37 @@
+<section class="section">
+  <div class="container">
+    <h1><%= t('admin.title') %></h1>
+    <%- include('../partials/admin-nav') %>
+
+    <p class="muted"><%= t('admin.bodyHint') %></p>
+
+    <form action="/admin/contents" method="post" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <% sections.forEach(function (key) { %>
+        <details class="card content-block" <%= key === 'hero' ? 'open' : '' %>>
+          <summary><strong><%= t('admin.sections.' + key) %></strong> <span class="muted mono">#<%= key %></span></summary>
+          <div class="grid-2">
+            <% ['vi', 'en'].forEach(function (l) { %>
+              <div class="lang-col">
+                <p class="lang-tag mono"><%= l.toUpperCase() %></p>
+                <label>
+                  <span><%= t('admin.sectionTitle') %></span>
+                  <input type="text" name="contents[<%= key %>][<%= l %>][title]" value="<%= contents[l][key].title %>" maxlength="200">
+                </label>
+                <label>
+                  <span><%= t('admin.sectionBody') %></span>
+                  <textarea name="contents[<%= key %>][<%= l %>][body]" rows="8"><%= contents[l][key].body %></textarea>
+                </label>
+              </div>
+            <% }) %>
+          </div>
+        </details>
+      <% }) %>
+
+      <div class="form-actions sticky-actions">
+        <button type="submit" class="btn btn-primary"><%= t('admin.save') %></button>
+      </div>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,13 @@
+<div class="countdown" data-countdown
+     data-start="<%= settings.contest_start %>"
+     data-end="<%= settings.contest_end %>"
+     data-running="<%= t('home.countdownRunning') %>"
+     data-ended="<%= t('home.countdownEnded') %>">
+  <p class="countdown-title" data-countdown-title><%= t('home.countdownTitle') %></p>
+  <div class="countdown-grid" data-countdown-grid>
+    <div><span data-unit="d">--</span><small><%= t('home.days') %></small></div>
+    <div><span data-unit="h">--</span><small><%= t('home.hours') %></small></div>
+    <div><span data-unit="m">--</span><small><%= t('home.minutes') %></small></div>
+    <div><span data-unit="s">--</span><small><%= t('home.seconds') %></small></div>
+  </div>
+</div>

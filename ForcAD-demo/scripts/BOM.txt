@@ -1,0 +1,16 @@
+.dockerignore
+.version
+backend/lib
+backend/requirements.txt
+backend/scripts
+backend/services
+checkers/requirements.txt
+cli
+config.yml.example
+control.py
+docker-compose-fast.yml
+docker-compose.yml
+docker_config
+front/dist
+LICENSE
+README.md

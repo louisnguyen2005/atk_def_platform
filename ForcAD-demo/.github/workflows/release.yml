@@ -1,0 +1,68 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64,arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          platforms: linux/amd64,linux/arm64
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker_config/base_images/backend.Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/forcad_base:latest
+            ghcr.io/${{ github.repository_owner }}/forcad_base:${{ steps.get_version.outputs.VERSION }}
+
+      - name: Set up Node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Build frontend
+        working-directory: front
+        run: yarn install && yarn build
+
+      - name: Setup release
+        run: |
+          echo ${{ steps.get_version.outputs.VERSION }} > .version
+          ./scripts/prepare_release.sh
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ForcAD_${{ steps.get_version.outputs.VERSION }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

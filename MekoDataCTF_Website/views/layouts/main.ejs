@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><% if(typeof worldGamePage !== 'undefined' && worldGamePage) { %>WORLD ARENA · ATTACK / DEFENSE<% } else { %><%= typeof title !== 'undefined' ? title + ' · ' : '' %>MekoDataCTF<% } %></title>
+  <meta name="description" content="<%= t('site.tagline') %>">
+  <link rel="icon" href="<%= typeof worldGamePage !== 'undefined' && worldGamePage ? '/images/world.svg' : '/images/favicon.svg' %>" type="image/svg+xml">
+  <% if(typeof worldGamePage === 'undefined' || !worldGamePage) { %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <% } %>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="<%= typeof isHome !== 'undefined' && isHome ? 'page-home' : 'page-inner' %>">
+  <div class="site-bg" aria-hidden="true"></div>
+
+  <%- include('../partials/navbar') %>
+
+  <main>
+    <%- include('../partials/flash') %>
+    <%- body %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <strong class="brand-text">Meko<span>Data</span>CTF</strong>
+        <p><%= t('site.footer') %></p>
+      </div>
+      <p class="muted">© <%= new Date().getFullYear() %> MekoDataCTF</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js" defer></script>
+</body>
+</html>

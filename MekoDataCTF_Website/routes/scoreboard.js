@@ -1,0 +1,24 @@
+const router = require('express').Router();
+const origin = process.env.FORCAD_URL || 'http://127.0.0.1:18080';
+router.get('/scoreboard', (req,res) => res.render('scoreboard',{title:'WORLD ARENA',worldGamePage:true}));
+// Fixed read-only upstream routes: never relay cookies, credentials or admin APIs.
+for (const endpoint of ['tick-status','teams','arena']) {
+ router.get('/scoreboard/data/'+endpoint, async (req,res) => {
+  res.set('Cache-Control','no-store');
+  try {
+   const response = await fetch(new URL('/api/client/'+endpoint+'/',origin),{signal:AbortSignal.timeout(6000),redirect:'error'});
+   if (!response.ok) throw Error('upstream');
+   const data = await response.json();
+   if (endpoint === 'arena') return res.json({services:data.services,captures:data.captures,checks:data.checks});
+   if (endpoint === 'teams') return res.json(data.map(t => ({id:t.id,name:t.name})));
+   return res.json({mode:data.mode,round:data.round,tick:data.tick,phase:data.phase,deadline:data.deadline,tick_seconds:data.tick_seconds,ticks_per_round:data.ticks_per_round,max_rounds:data.max_rounds,scores:data.scores,results:data.results,running:data.running,overall_tick:data.overall_tick});
+  } catch (_) {res.status(503).json({error:'Scoreboard temporarily unavailable'});}
+ });
+}
+router.post('/scoreboard/submit', async(req,res)=>{
+ const {token,flags}=req.body||{};
+ res.set('Cache-Control','no-store');
+ if(typeof token!=='string'||token.length>128||!Array.isArray(flags)||flags.length<1||flags.length>100||flags.some(f=>typeof f!=='string'||f.length>100))return res.status(400).json({error:'Kiểm tra token và danh sách flag (tối đa 100).'});
+ try{const upstream=await fetch(new URL('/flags/',origin),{method:'PUT',headers:{'Content-Type':'application/json','X-Team-Token':token},body:JSON.stringify(flags),signal:AbortSignal.timeout(8000),redirect:'error'});res.status(upstream.status).json(await upstream.json());}catch(_){res.status(503).json({error:'Bộ nhận flag chưa kết nối được.'});}
+});
+module.exports=router;

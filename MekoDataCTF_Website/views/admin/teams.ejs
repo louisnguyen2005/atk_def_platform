@@ -1,0 +1,56 @@
+<section class="section">
+  <div class="container">
+    <h1><%= t('admin.title') %></h1>
+    <%- include('../partials/admin-nav') %>
+
+    <div class="toolbar">
+      <form action="/admin/teams" method="get" class="search-form">
+        <input type="search" name="q" value="<%= q %>" placeholder="<%= t('admin.search') %>">
+        <button type="submit" class="btn btn-outline"><%= t('admin.searchBtn') %></button>
+      </form>
+      <div class="export-actions">
+        <a href="/admin/export.xlsx" class="btn btn-primary"><%= t('admin.exportXlsx') %></a>
+        <a href="/admin/export.csv" class="btn btn-outline"><%= t('admin.exportCsv') %></a>
+      </div>
+    </div>
+
+    <% if (teams.length === 0) { %>
+      <div class="card"><p class="muted"><%= t('admin.noTeams') %></p></div>
+    <% } else { %>
+      <div class="table-wrap card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th><%= t('team.name') %></th>
+              <th><%= t('team.email') %></th>
+              <th><%= t('team.school') %></th>
+              <th><%= t('team.members') %></th>
+              <th><%= t('team.registeredAt') %></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% teams.forEach(function (tm, i) { %>
+              <tr>
+                <td><%= i + 1 %></td>
+                <td><a href="/admin/teams/<%= tm.id %>"><strong><%= tm.name %></strong></a></td>
+                <td><%= tm.email %></td>
+                <td><%= tm.school %></td>
+                <td class="mono"><%= tm.member_count %></td>
+                <td class="mono"><%= tm.created_at %></td>
+                <td class="row-actions">
+                  <a href="/admin/teams/<%= tm.id %>" class="btn btn-ghost btn-sm"><%= t('admin.view') %></a>
+                  <form action="/admin/teams/<%= tm.id %>/delete" method="post" class="inline-form" data-confirm="<%= t('admin.confirmDelete') %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn btn-danger btn-sm"><%= t('admin.delete') %></button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
