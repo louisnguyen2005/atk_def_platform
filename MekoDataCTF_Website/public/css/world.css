@@ -1,12 +1,280 @@
-body:has(.world-map){background:#101917}.page-inner:has(.world-map)>.navbar,.page-inner:has(.world-map)>.site-bg,.page-inner:has(.world-map)>.site-footer{display:none}.arena:has(.world-map){max-width:1700px;background:#111b1a;border-top-color:#a39b75;margin:0 auto;min-height:100vh}.world-layout{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(340px,1fr);gap:24px;margin-top:22px}.world-map{position:relative;align-self:start;border:1px solid #58604b;isolation:isolate}.world-map>svg{width:100%;display:block}.territory{stroke:none;opacity:.32}.wolf{--team:#9ddbf4;color:#9ddbf4;fill:#577d86}.tiger{--team:#e8a76c;color:#e8a76c;fill:#8d663b}.eagle{--team:#e0cd80;color:#e0cd80;fill:#928445}.bear{--team:#9acb9e;color:#9acb9e;fill:#52765b}.map-base{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;background:#111c1deB;border:1px solid var(--team);padding:10px;min-width:160px}.map-base>svg{width:44px;height:52px;flex-shrink:0}.map-base h2{font-size:15px;margin:0;color:var(--team)}.map-base p{font:10px monospace;margin:2px 0;color:#c9cfbe}.map-base strong{font:700 26px monospace;display:inline-block;min-width:44px;color:#eef0df}.map-base span{font:10px monospace;color:#ced4c5}.map-base.service-alert{border-style:dashed}.map-base.service-alert [data-base-status]{color:#ffab91}.map-compass{position:absolute;right:3%;top:3%;text-align:center;font:18px monospace;color:#b3b79b}.map-caption{font:9px monospace;letter-spacing:1px;margin:0;padding:8px;border-top:1px solid #58604b;color:#acb69e}.world-ranking table th,.world-ranking table td{padding:13px 6px;font-size:12px}.world-ranking table td:nth-child(3){font-size:22px}.world-ranking caption{padding-top:0}.world-bottom{display:grid;grid-template-columns:1fr 1fr;gap:30px}.world-bottom h2{font:18px monospace;color:#d4cdac;border-bottom:1px solid #4b5346;padding-bottom:12px}.world-bottom section{min-width:0}.world-bottom #world-checks{max-height:300px;overflow:auto}.world-entry{border-bottom:1px solid #364438;padding:10px 0;font-size:12px}.capture-line{stroke:#e6c782;stroke-dasharray:8 5;animation:march 1s linear 3}.map-base.hit{animation:hit 1s ease-out 3}@keyframes march{to{stroke-dashoffset:-26}}@keyframes hit{50%{background:#703729}}@media(max-width:1100px){.world-layout{grid-template-columns:1fr}.world-bottom{grid-template-columns:1fr}}@media(max-width:600px){.arena:has(.world-map){margin:0;padding:12px}.world-map{min-height:0}.map-base{min-width:112px;padding:5px;gap:4px}.map-base>svg{width:26px;height:34px}.map-base h2{font-size:11px}.map-base p,.map-base span{font-size:8px}.map-base strong{font-size:18px;min-width:32px}.map-base p:nth-child(2){display:none}.map-caption{font-size:7px}.world-ranking{width:100%;overflow:auto}.arena-head h1{font-size:24px}}@media(prefers-reduced-motion:reduce){.capture-line,.map-base.hit{animation:none}}
-.world-submit label{display:block;margin:12px 0}.world-submit input,.world-submit textarea{display:block;background:#1b2926;color:#eef0dd;border:1px solid #75836b;padding:10px;width:100%;box-sizing:border-box}.world-submit button{padding:10px 20px;background:#b6bf99;color:#18251e;border:0;margin-right:8px;cursor:pointer}.world-submit pre{white-space:pre-wrap;overflow-wrap:anywhere}.world-submit :focus-visible{outline:3px solid #e8bd72;outline-offset:3px}
+/* World Arena — chiến trường Attack/Defense. Chỉ áp dụng cho trang /scoreboard. */
+body:has(.war){background:#04101a}
+.page-inner:has(.war)>.navbar,.page-inner:has(.war)>.site-bg,.page-inner:has(.war)>.site-footer{display:none}
 
-.map-base[data-team="team01"]{left:28%;top:34%}.map-base[data-team="team02"]{left:72%;top:32%}.map-base[data-team="team03"]{left:30%;top:70%}.map-base[data-team="team04"]{left:70%;top:70%}
+.arena.war{--ink:#e6f2f6;--muted:#8fa9b6;--line:#1d3a4b;--panel:#0a1822;--gold:#ffc94d;--red:#ff4d4f;--green:#4fe3b0;
+ max-width:1760px;margin:0 auto;min-height:100vh;background:radial-gradient(ellipse at top,#0e2a3e,#04101a 60%);border-top:3px solid var(--gold);color:var(--ink)}
+.beast-defs{position:absolute;width:0;height:0;overflow:hidden}
 
-.base-shield{width:16px;height:18px;float:left;margin-right:4px}.service-alert .base-shield{display:none}#world-status:not(:empty){position:absolute;z-index:3;top:0;left:0;right:0;padding:8px;background:#513923;color:#ffe1b4;font:11px monospace}.attacking>svg{animation:advance .7s ease-in-out 4}@keyframes advance{50%{transform:translateY(-5px) scale(1.1)}}@media(prefers-reduced-motion:reduce){.attacking>svg{animation:none}}
+/* ---------- HUD ---------- */
+.war-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.war-brand h1{font:800 clamp(24px,3vw,34px)/1 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:0}
+.war .arena-kicker{color:var(--gold)}
+.war-clock{display:flex;align-items:center;gap:14px;padding:10px 22px;border:2px solid var(--gold);background:#120f05cc;box-shadow:0 0 18px #ffc94d40,inset 0 0 12px #ffc94d22}
+.war-clock-label{font:700 15px monospace;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
+.war-clock [data-timer]{font:800 30px monospace;color:#fff;font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:center}
+.war-clock [data-timer].urgent{color:var(--red);animation:blink 1s steps(2) infinite}
+.war-stats{display:flex;justify-content:flex-end;gap:22px;margin:0}
+.war-stats div{text-align:right}
+.war-stats dt{font:10px monospace;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.war-stats dd{margin:0;font:700 20px monospace;font-variant-numeric:tabular-nums}
+.war-ribbon{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;padding:8px 14px;border:1px solid var(--line);background:#07131bcc;font:12px monospace;letter-spacing:1px;text-transform:uppercase}
+.war-ribbon [data-phase]{color:var(--gold);font-weight:700}
+.war-ribbon-note{color:var(--muted)}
+.war-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:pulse 1.6s ease-in-out infinite}
+.war-live{margin-left:auto;color:var(--green)}
+.arena.war.disconnected .war-live{color:#ffad61}
+.arena.war.disconnected .war-dot{background:#ffad61;animation:none}
+.war-motion{padding:3px 10px;background:transparent;color:var(--muted);border:1px solid var(--line);font:11px monospace;letter-spacing:1px;cursor:pointer}
+.war-motion[aria-pressed="true"]{color:var(--gold);border-color:#7a6224}
+.war-motion:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.war progress{margin-top:6px;accent-color:var(--gold)}
 
-.map-base:focus-visible{outline:3px solid #f4e4b6;outline-offset:4px}details summary{cursor:pointer;color:#d1d6bd;padding:10px 0}#world-service-details{max-height:280px;overflow:auto}#world-services{font-size:11px;max-width:100%;overflow-wrap:anywhere}.world-ranking table{table-layout:fixed}.world-ranking th:nth-child(2),.world-ranking td:nth-child(2){width:24%}.world-ranking td{overflow:hidden;text-overflow:ellipsis}.world-ranking tr{height:66px}
+/* ---------- Bố cục ---------- */
+.world-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,400px);gap:22px;margin-top:18px}
+.world-map{position:relative;min-width:0;border:2px solid #10364a;background:#1d7fb4;box-shadow:0 0 0 1px #0a1822,0 18px 50px #00000080}
+.world-map{align-self:start}
+.map-stage{position:relative;aspect-ratio:16/10;overflow:hidden;container-type:inline-size;--emb:7.6cqi}
+.map-stage.dense{--emb:5.4cqi}
+.map-svg,.fx-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.fx-svg{z-index:5;pointer-events:none;overflow:visible}
+.map-caption{margin:0;padding:8px 12px;border-top:1px solid #1f4256;font:10px monospace;letter-spacing:1px;color:#9fb9c6;text-align:center;background:#06111a}
+#world-status:not(:empty){position:absolute;z-index:8;top:0;left:0;right:0;padding:8px;background:#513923;color:#ffe1b4;font:11px monospace;text-align:center}
 
-.world-layout{grid-template-columns:minmax(0,1.8fr) minmax(410px,1fr)}.world-ranking table th{font-size:10px;letter-spacing:0;white-space:normal}.world-ranking table td{padding:13px 4px}.world-ranking table th:first-child{width:9%}.world-ranking table td:nth-child(3){font-size:24px}.map-base{border-radius:0}.map-base p{font-size:11px}.arena:has(.world-map) .arena-head h1{font-size:30px}.world-map .map-base .base-shield{width:15px;height:18px}@media(max-width:1100px){.world-layout{grid-template-columns:1fr}}@media(max-width:600px){.map-base p{font-size:9px}.world-ranking table th{font-size:9px}.arena:has(.world-map) .arena-head h1{font-size:24px}}
+/* Biển & địa hình (SVG) */
+.sea-waves{animation:waves 14s linear infinite}
+.spark{fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:twinkle 3s ease-in-out infinite}
+.map-label text{font:700 18px Georgia,'Times New Roman',serif;letter-spacing:6px;fill:#ffffff;fill-opacity:.82;paint-order:stroke;stroke:#0d5b80;stroke-opacity:.35;stroke-width:3}
+.map-label .map-label--lake{font-size:12px;letter-spacing:3px;fill-opacity:.9}
+.map-label--server{font:700 13px monospace;letter-spacing:3px;fill:#e8fffa;paint-order:stroke;stroke:#05414d;stroke-width:3}
+.map-ticks text{font:12px monospace;fill:#eafaff;fill-opacity:.7}
+.map-scale text{font:11px monospace;fill:#fff}
+.radar-sweep{transform-box:view-box;transform-origin:0 0;animation:sweep 4s linear infinite}
+.foam{animation:foam 5s ease-in-out infinite}
 
-@media(max-width:600px){.arena:has(.world-map) .arena-meta{display:grid;grid-template-columns:1fr auto;gap:12px}.arena-meta [data-phase]{grid-column:1;grid-row:1}.arena-meta [data-tick]{grid-column:2;grid-row:1}.arena-meta #world-services{grid-column:1;grid-row:2;font-size:9px}.arena-meta [data-timer]{grid-column:2;grid-row:2;font-size:18px}.map-base span{font-size:9px}}
+/* Lãnh thổ từng đội & vùng đất trống */
+.territory{fill-opacity:.38;stroke-width:7;stroke-opacity:1;stroke-dasharray:22 9;stroke-linejoin:round;filter:drop-shadow(0 0 6px #fff8);transition:fill-opacity .4s}
+.territory.down{stroke:#ff4d4f;fill-opacity:.16;stroke-dasharray:10 8;animation:territory-alert 1.2s steps(2) infinite}
+.outpost circle{fill:#ffffff1a;stroke:#fff;stroke-opacity:.55;stroke-width:2;stroke-dasharray:5 6}
+.outpost path{fill:#ffffffaa;stroke:#ffffffcc;stroke-width:2;stroke-linejoin:round}
+
+/* Khí quyển: nắng, tia sáng, mây (lớp HTML để GPU xử lý chuyển động) */
+.map-atmo{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.sun-glow{position:absolute;right:-22%;top:-48%;width:80%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fffbe6cc 0,#fff3b066 18%,#ffe08a22 40%,transparent 66%);mix-blend-mode:screen}
+.rays{position:absolute;right:1%;top:-4%;width:0;height:0}
+.rays i{position:absolute;right:0;top:0;height:9cqi;width:150cqi;transform-origin:100% 50%;background:linear-gradient(to left,#fffbe0aa,#fff7d044 35%,transparent 80%);mix-blend-mode:soft-light;clip-path:polygon(0 30%,100% 48%,100% 52%,0 70%);animation:ray 9s ease-in-out infinite alternate}
+.rays i:nth-child(1){transform:rotate(-178deg);height:7cqi}
+.rays i:nth-child(2){transform:rotate(-166deg);animation-delay:-2s}
+.rays i:nth-child(3){transform:rotate(-154deg);height:12cqi;animation-delay:-4s}
+.rays i:nth-child(4){transform:rotate(-142deg);animation-delay:-1s}
+.rays i:nth-child(5){transform:rotate(-129deg);height:14cqi;animation-delay:-3s}
+.rays i:nth-child(6){transform:rotate(-116deg);height:8cqi;animation-delay:-5s}
+.rays i:nth-child(7){transform:rotate(-103deg);animation-delay:-6s}
+.cloud{position:absolute;width:24cqi;height:9cqi;border-radius:50%;opacity:.85;filter:blur(.35cqi);background:radial-gradient(ellipse 34% 52% at 30% 58%,#fff 60%,transparent 62%),radial-gradient(ellipse 30% 60% at 52% 42%,#fff 60%,transparent 62%),radial-gradient(ellipse 30% 46% at 72% 60%,#fff 60%,transparent 62%),radial-gradient(ellipse 46% 30% at 50% 74%,#f2fbff 60%,transparent 62%);animation:drift 150s linear infinite}
+.cloud::after{content:"";position:absolute;inset:0;transform:translate(-2.6cqi,4.2cqi);border-radius:50%;background:radial-gradient(ellipse at center,#04365455 0,transparent 66%);filter:blur(1cqi);z-index:-1}
+.cloud.c1{top:6%;animation-delay:-30s}
+.cloud.c2{top:44%;width:18cqi;height:7cqi;animation-duration:190s;animation-delay:-120s;opacity:.7}
+.cloud.c3{top:74%;width:28cqi;height:10cqi;animation-duration:170s;animation-delay:-70s;opacity:.75}
+
+/* ---------- Căn cứ & linh thú ---------- */
+.map-bases{position:absolute;inset:0;z-index:3}
+.map-base{--team:#38bdf8;--eye:#ffd166;position:absolute;width:var(--emb);transform:translate(-50%,calc(var(--emb) / -2));display:flex;flex-direction:column;align-items:center;outline:none;color:var(--team)}
+.base-emblem{position:relative;width:100%;aspect-ratio:1;display:grid;place-items:end center}
+.base-pad{position:absolute;left:-14%;right:-14%;bottom:-6%;height:34%;border-radius:50%;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--team) 70%,#fff) 0,color-mix(in srgb,var(--team) 45%,transparent) 42%,transparent 70%);box-shadow:0 0 0 2px color-mix(in srgb,var(--team) 80%,transparent);opacity:.9;animation:pad 3s ease-in-out infinite}
+.base-beast{position:relative;width:130%;margin-bottom:-4%;filter:drop-shadow(0 .35cqi .25cqi #0006);transition:filter .4s}
+.base-beast .beast{display:block;width:100%;height:auto;overflow:visible}
+.map-base:hover .base-beast,.map-base:focus-visible .base-beast{filter:drop-shadow(0 0 .6cqi var(--team)) drop-shadow(0 .35cqi .25cqi #0006)}
+.base-crown{position:absolute;top:-30%;left:50%;transform:translateX(-50%);font-size:calc(var(--emb) * .38);line-height:1;color:var(--gold);text-shadow:0 0 10px #ffc94daa,0 2px 0 #7a5300;opacity:0;transition:opacity .4s}
+.map-base.leader .base-crown{opacity:1;animation:bob 2.4s ease-in-out infinite}
+.base-plate{margin-top:4%;padding:1px 7px 2px;text-align:center;white-space:nowrap;background:#04101ae0;border:1px solid color-mix(in srgb,var(--team) 80%,transparent);border-radius:3px;box-shadow:0 2px 8px #0007;display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:center;column-gap:6px}
+.base-plate h2{grid-column:1/-1;margin:0;font:700 clamp(8px,1.05cqi,13px) monospace;letter-spacing:1px;color:var(--team);text-transform:uppercase}
+.base-plate strong{font:800 clamp(10px,1.45cqi,19px) monospace;color:#fff;font-variant-numeric:tabular-nums}
+.base-plate span{font:clamp(7px,.85cqi,11px) monospace;color:var(--muted)}
+.map-base.leader .base-plate{border-color:var(--gold);box-shadow:0 0 10px #ffc94d66}
+.base-badge{margin:3px 0 0;padding:1px 6px;font:700 clamp(6px,.8cqi,10px) monospace;letter-spacing:1px;white-space:nowrap;border-radius:2px;background:#0d3a2ce6;color:#7ff0c5;border:1px solid #2f8f6c}
+.map-base.svc-warn .base-badge{background:#3d2a07e6;color:#ffd27a;border-color:#a77a22}
+.map-base.svc-unknown .base-badge{background:#15232ce6;color:#9fb9c6;border-color:#35505f}
+.map-base.down .base-badge{background:var(--red);color:#fff;border-color:#ff9b9c;animation:blink 1.1s steps(2) infinite}
+
+/* Animation linh thú (toạ độ theo viewBox 160×140 của từng con) */
+.beast .b-eye,.beast .b-core{fill:var(--eye);animation:glow 2.2s ease-in-out infinite}
+.beast .b-body{transform-box:view-box;transform-origin:80px 126px;animation:idle 3s ease-in-out infinite}
+.beast-eagle .w-l{transform-box:view-box;transform-origin:70px 58px;animation:flap-l 1.5s ease-in-out infinite}
+.beast-eagle .w-r{transform-box:view-box;transform-origin:90px 58px;animation:flap-r 1.5s ease-in-out infinite}
+.beast-eagle .b-body{animation:hover-bob 1.5s ease-in-out infinite}
+.beast-eagle .b-head{transform-box:view-box;transform-origin:86px 46px;animation:look 6s ease-in-out infinite}
+.beast-elephant .b-trunk{transform-box:view-box;transform-origin:138px 70px;animation:trunk 3.2s ease-in-out infinite}
+.beast-elephant .b-ear{transform-box:view-box;transform-origin:120px 46px;animation:ear 2.4s ease-in-out infinite}
+.beast-bear .b-chassis{transform-box:view-box;transform-origin:75px 98px;animation:breathe 2.8s ease-in-out infinite}
+.beast-bear .b-head{transform-box:view-box;transform-origin:120px 58px;animation:nod 4s ease-in-out infinite}
+.beast-rex .b-jaw{transform-box:view-box;transform-origin:118px 45px;animation:jaw 3.4s ease-in-out infinite}
+.beast-rex .b-tail{transform-box:view-box;transform-origin:56px 70px;animation:tail 2.6s ease-in-out infinite}
+.beast-rex .b-head{transform-box:view-box;transform-origin:112px 40px;animation:roar-head 3.4s ease-in-out infinite}
+
+/* Trạng thái linh thú */
+.map-base.attacking .base-beast{animation:roar .6s ease-out 2}
+.map-base.attacking .beast *{animation-duration:.5s}
+.map-base.hit .base-beast{animation:shake .45s ease-in-out 3;filter:drop-shadow(0 0 .8cqi #ff3b3b) brightness(1.15) sepia(.4) hue-rotate(-30deg)}
+.map-base.down .base-beast{filter:grayscale(.85) brightness(.62) drop-shadow(0 0 .5cqi #ff4d4f)}
+.map-base.down .beast *{animation-play-state:paused}
+.map-base.down .base-pad{background:radial-gradient(ellipse at center,#ff4d4f88 0,transparent 70%);box-shadow:0 0 0 2px #ff4d4fcc}
+.base-smoke{position:absolute;left:50%;top:10%;width:0;height:0;display:none}
+.map-base.down .base-smoke{display:block}
+.base-smoke i{position:absolute;left:-1cqi;top:0;width:2cqi;height:2cqi;border-radius:50%;background:radial-gradient(circle,#4b4f55cc,#4b4f5500 70%);animation:smoke 2.4s ease-out infinite}
+.base-smoke i:nth-child(2){animation-delay:.8s;left:-.2cqi}
+.base-smoke i:nth-child(3){animation-delay:1.6s;left:-1.6cqi}
+
+/* Khiên */
+.base-shield{position:absolute;left:50%;top:50%;width:190%;height:190%;transform:translate(-50%,-50%) scale(.6);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;overflow:visible;z-index:2}
+.base-shield circle{fill:#7dffe01f;stroke:#7dffe0;stroke-width:2.5}
+.base-shield path{fill:none;stroke:#d9fff6;stroke-width:1.2;stroke-dasharray:6 5;opacity:.85}
+.base-shield-icon{position:absolute;right:-30%;top:-14%;width:42%;height:42%;color:#7dffe0;opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s;filter:drop-shadow(0 0 6px #4fe3b0);z-index:3}
+.map-base.shielded .base-shield,.map-base.blocked .base-shield{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.map-base.shielded .base-shield-icon,.map-base.blocked .base-shield-icon{opacity:1;transform:scale(1)}
+.map-base.shielded .base-shield circle{animation:shield-pulse 1.2s ease-in-out infinite}
+.map-base.blocked .base-shield circle{fill:#e6fffa55;stroke:#fff;stroke-width:4;animation:shield-flash .5s ease-out 2}
+.map-base.down.shielded:not(.blocked) .base-shield,.map-base.down.shielded:not(.blocked) .base-shield-icon{opacity:0}
+.map-base:focus-visible .base-plate{outline:2px solid #fff;outline-offset:2px}
+
+/* Số điểm nổi */
+.base-floats{position:absolute;left:50%;top:0;width:0;height:0;pointer-events:none;z-index:6}
+.score-float{position:absolute;left:0;top:0;transform:translate(-50%,0);white-space:nowrap;font:800 clamp(11px,1.7cqi,22px) monospace;text-shadow:0 0 6px #000,0 2px 0 #000;animation:float-up 2.6s ease-out forwards}
+.score-float.pos{color:#7dffb2}.score-float.neg{color:#ff6b6d}.score-float.info{color:#d9fff6}
+.score-float small{font-size:.6em;margin-left:4px;letter-spacing:1px}
+
+/* ---------- Hiệu ứng đạn ---------- */
+.fx-layer{pointer-events:none}
+.fx-trail{fill:none;stroke-width:4;stroke-linecap:round}
+.fx-trail.hit{stroke:#ff9f1c}
+.fx-trail.blocked{stroke:#e0faff;stroke-dasharray:3 10}
+.fx-shell{filter:url(#fx-glow)}
+.fx-shell.hit{fill:#fff6cf;stroke:#ff6a00;stroke-width:3.5}
+.fx-shell.blocked{fill:#ffffff;stroke:#38bdf8;stroke-width:3.5}
+.fx-burst{fill:none;stroke-width:5;transform-box:fill-box;transform-origin:center;animation:burst .8s ease-out forwards}
+.fx-burst.hit{stroke:#ff5a1f}
+.fx-burst.blocked{stroke:#e6fffa}
+.fx-spark{stroke-width:3.5;stroke-linecap:round;animation:spark .7s ease-out forwards}
+.fx-spark.hit{stroke:#ffd166}.fx-spark.blocked{stroke:#bff4ff}
+.fx-muzzle{fill:#fff3c4;transform-box:fill-box;transform-origin:center;animation:burst .45s ease-out forwards}
+
+/* ---------- Cột phải ---------- */
+.war-side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.world-ranking,.war-rules,.war-roster{border:1px solid var(--line);background:var(--panel)}
+.world-ranking{padding:0 14px}
+.world-ranking caption{padding:14px 0 8px;font:700 13px monospace;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+.war table{table-layout:fixed}
+.war th,.war td{padding:12px 4px;border-bottom:1px solid var(--line);font-size:12px}
+.war th{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.war th:first-child,.war td:first-child{width:13%;text-align:center}
+.war th:nth-child(2),.war td:nth-child(2){width:25%;overflow:hidden;text-overflow:ellipsis}
+.war td:nth-child(3){color:#fff;font:800 20px monospace}
+.war tr.leader{background:linear-gradient(90deg,#3a2d0855,transparent)}
+.war tr.leader td:first-child::before{content:"♛ ";color:var(--gold)}
+.war td[data-team-dot]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--dot,#9ddbf4)}
+.war-rules,.war-roster{padding:12px 16px}
+.war-rules h2,.war-roster h2{margin:0 0 8px;font:700 13px monospace;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+.war-rules ul{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:13px;line-height:1.45;color:#cfe0e7}
+.war-rules li{position:relative;padding-left:30px}
+.war-rules li .lg{position:absolute;left:0;top:1px}
+.war-rules em{font-style:normal;font-weight:700;color:#7dffb2;font-family:monospace}
+.war-rules em.neg{color:#ff6b6d}
+.lg{width:18px;height:18px;border-radius:50%;display:inline-block}
+.lg-hit{background:radial-gradient(circle,#fff1c2 25%,#ff8a1f 30%,transparent 65%)}
+.lg-sla{border:2px solid #4fe3b0;background:#4fe3b022;box-shadow:0 0 6px #4fe3b0}
+.lg-down{background:var(--red);border-radius:3px;box-shadow:0 0 6px var(--red)}
+.lg-block{border:2px dashed #bffff0;background:radial-gradient(circle,#e8fbff 25%,transparent 30%)}
+.war-roster ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.war-roster li{--team:#38bdf8;display:flex;align-items:center;gap:8px;padding:6px;border:1px solid color-mix(in srgb,var(--team) 45%,transparent);background:color-mix(in srgb,var(--team) 8%,transparent);min-width:0}
+.war-roster .roster-beast{width:46px;height:40px;flex-shrink:0}
+.war-roster b{display:block;font:700 12px monospace;color:var(--team)}
+.war-roster span{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- Nhật ký ---------- */
+.world-bottom{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:10px}
+.world-bottom section{min-width:0;border:1px solid var(--line);background:var(--panel);padding:4px 16px 12px}
+.world-bottom h2{font:700 13px monospace;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--line);padding-bottom:10px}
+#world-feed,#world-checks{max-height:300px;overflow:auto}
+.world-entry{display:flex;gap:8px;align-items:baseline;border-bottom:1px solid #12293a;padding:8px 0;margin:0;font:12px monospace;color:#cfe0e7}
+.world-entry .tag{flex-shrink:0;padding:1px 6px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:1px}
+.tag-hit{background:#5a2a0c;color:#ffc58a}.tag-block{background:#0d3442;color:#9fe9ff}.tag-sla{background:#0d3a2c;color:#7ff0c5}.tag-down{background:#5b1416;color:#ffb3b4}.tag-info{background:#15232c;color:#9fb9c6}
+.world-entry.fresh{animation:fresh 1.6s ease-out}
+details summary{cursor:pointer;color:#d1d6bd;padding:10px 0;font-size:13px}
+#world-service-details{max-height:240px;overflow:auto}
+#world-services{color:var(--muted);font:11px monospace;overflow-wrap:anywhere}
+
+/* ---------- Nộp flag ---------- */
+.world-submit{margin-top:22px;border:1px solid var(--line);background:var(--panel);padding:4px 18px 16px}
+.world-submit h2{font:700 13px monospace;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+.world-submit label{display:block;margin:10px 0;font-size:13px}
+.world-submit input,.world-submit textarea,.world-submit select{display:block;margin-top:4px;background:#0f2230;color:#eef6f8;border:1px solid #36586b;padding:10px;width:100%;box-sizing:border-box;font:13px monospace}
+.submit-fx{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0;padding:6px 12px 2px;border:1px dashed #36586b}
+.submit-fx legend{font-size:11px;color:var(--muted);padding:0 6px}
+.world-submit button{padding:10px 20px;background:var(--gold);color:#1a1405;font-weight:700;border:0;margin:6px 8px 0 0;cursor:pointer}
+.world-submit button[type=reset]{background:#26404f;color:#e6f2f6}
+.world-submit button:disabled{opacity:.6;cursor:wait}
+.world-submit pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;color:#cfe0e7}
+.world-submit :focus-visible{outline:3px solid #e8bd72;outline-offset:3px}
+
+/* ---------- Keyframes ---------- */
+@keyframes waves{to{transform:translate(64px,36px)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.3)}45%{opacity:1;transform:scale(1)}60%{opacity:.6;transform:scale(.7) rotate(45deg)}}
+@keyframes foam{50%{opacity:.45}}
+@keyframes ray{from{opacity:.55;translate:0 0}to{opacity:1;translate:0 1.2cqi}}
+@keyframes drift{from{left:-30%}to{left:110%}}
+@keyframes sweep{to{transform:rotate(-360deg)}}
+@keyframes pulse{50%{opacity:.35}}
+@keyframes blink{50%{opacity:.45}}
+@keyframes bob{50%{transform:translate(-50%,-4px)}}
+@keyframes pad{50%{opacity:.6}}
+@keyframes glow{50%{opacity:.55}}
+@keyframes idle{50%{transform:translateY(-1.5px)}}
+@keyframes hover-bob{50%{transform:translateY(-5px)}}
+@keyframes flap-l{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
+@keyframes flap-r{0%,100%{transform:rotate(0)}50%{transform:rotate(24deg)}}
+@keyframes look{0%,40%,100%{transform:rotate(0)}50%,80%{transform:rotate(-7deg)}}
+@keyframes trunk{0%,100%{transform:rotate(0)}30%{transform:rotate(-14deg)}65%{transform:rotate(6deg)}}
+@keyframes ear{0%,100%{transform:rotate(0)}50%{transform:rotate(-10deg)}}
+@keyframes breathe{50%{transform:scale(1.025,1.04)}}
+@keyframes nod{0%,100%{transform:rotate(0)}25%{transform:rotate(5deg)}60%{transform:rotate(-3deg)}}
+@keyframes jaw{0%,55%,100%{transform:rotate(0)}65%,82%{transform:rotate(20deg)}}
+@keyframes roar-head{0%,55%,100%{transform:rotate(0)}65%,82%{transform:rotate(-6deg)}}
+@keyframes tail{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)}}
+@keyframes roar{40%{transform:scale(1.18) translateY(-6%)}}
+@keyframes smoke{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translate(.8cqi,-4cqi) scale(2.2)}}
+@keyframes territory-alert{50%{stroke-opacity:.35}}
+@keyframes shield-pulse{50%{fill:#7dffe033;stroke-width:4}}
+@keyframes shield-flash{0%{stroke-width:9;fill:#ffffff88}100%{stroke-width:4}}
+@keyframes shake{20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
+@keyframes float-up{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}12%{opacity:1;transform:translate(-50%,-6px) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60px)}}
+@keyframes burst{0%{opacity:1;transform:scale(.2)}100%{opacity:0;transform:scale(2.4)}}
+@keyframes spark{0%{opacity:1}100%{opacity:0;stroke-dashoffset:-30}}
+@keyframes fresh{from{background:#1d3f52}to{background:transparent}}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1200px){.world-layout{grid-template-columns:1fr}.war-side{display:grid;grid-template-columns:1fr 1fr;align-items:start}.war-roster{grid-column:1/-1}.war-roster ul{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+@media(max-width:900px){.war-hud{grid-template-columns:1fr auto}.war-stats{grid-column:1/-1;justify-content:space-between}.war-side{grid-template-columns:1fr}.world-bottom{grid-template-columns:1fr}}
+@media(max-width:600px){
+ .arena.war{padding:12px}
+ .war-hud{grid-template-columns:1fr;gap:10px}
+ .war-clock{justify-content:space-between;padding:8px 12px}
+ .war-clock-label{font-size:11px;letter-spacing:1px}
+ .war-clock [data-timer]{font-size:22px}
+ .war-stats{gap:8px}.war-stats dd{font-size:15px}.war-stats dt{font-size:8px;letter-spacing:1px}
+ .war-ribbon{font-size:10px;padding:6px 10px}.war-ribbon-note{display:none}
+ .map-stage{--emb:10cqi}.map-stage.dense{--emb:7cqi}
+ .base-plate{padding:0 3px;column-gap:3px}
+ .base-plate span{display:none}
+ .base-badge{padding:0 3px;letter-spacing:0}
+ .dense .base-badge{font-size:0;padding:3px;border-radius:50%;margin-top:2px}
+ .map-ticks,.map-scale,.map-label .map-label--lake{display:none}
+ .map-caption{font-size:8px}
+ .war th,.war td{padding:10px 3px;font-size:11px}.war th{font-size:8px;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}.war td:nth-child(3){font-size:16px}
+ .war-roster ul{grid-template-columns:1fr}
+ .submit-fx{grid-template-columns:1fr}
+}
+
+/* Tắt hiệu ứng động: mặc định theo prefers-reduced-motion, người xem có thể bật lại (world.js). */
+.war.calm .map-stage *,.war.calm .war-dot,.war.calm .war-clock [data-timer].urgent,.war.calm .world-entry.fresh,.war.calm .war-roster *{animation:none!important}
+.war.calm .spark{opacity:.7}
+.war.calm .score-float{transform:translate(-50%,-30px)}
+.war.calm .cloud.c1{left:8%}.war.calm .cloud.c2{left:55%}.war.calm .cloud.c3{left:30%}

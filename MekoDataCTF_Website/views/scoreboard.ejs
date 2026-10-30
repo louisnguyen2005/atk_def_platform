@@ -1,10 +1,221 @@
+<%
+// Đường cong khép kín mềm (Catmull-Rom) quanh tâm — dùng cho đảo nhỏ, rừng và hồ.
+function blob(cx, cy, rx, ry, seed, n) {
+  n = n || 10;
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = i / n * Math.PI * 2;
+    const r = (((Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453) % 1) + 1) % 1;
+    const k = 0.78 + 0.32 * r;
+    pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]);
+  }
+  const f = v => v.toFixed(1);
+  let d = 'M' + f(pts[0][0]) + ' ' + f(pts[0][1]);
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+    d += 'C' + f(p1[0] + (p2[0] - p0[0]) / 6) + ' ' + f(p1[1] + (p2[1] - p0[1]) / 6) + ' ' + f(p2[0] - (p3[0] - p1[0]) / 6) + ' ' + f(p2[1] - (p3[1] - p1[1]) / 6) + ' ' + f(p2[0]) + ' ' + f(p2[1]);
+  }
+  return d + 'Z';
+}
+// Dãy núi: mặt sáng hướng về mặt trời (góc trên bên phải).
+function mountain(x, y, s) {
+  return {
+    dark: `M${x - 22 * s} ${y}L${x} ${y - 30 * s}L${x + 3 * s} ${y}Z`,
+    light: `M${x} ${y - 30 * s}L${x + 22 * s} ${y}L${x + 3 * s} ${y}Z`,
+    snow: `M${x - 7 * s} ${y - 20 * s}L${x} ${y - 30 * s}L${x + 7 * s} ${y - 20 * s}L${x + 3 * s} ${y - 22 * s}L${x} ${y - 19 * s}L${x - 3 * s} ${y - 22 * s}Z`,
+  };
+}
+const ranges = [
+  [[110, 320, 1], [138, 300, 1.25], [168, 326, .95], [96, 344, .8]],
+  [[100, 650, .9], [126, 628, 1.2], [154, 656, .95]],
+  [[1070, 450, 1], [1098, 430, 1.3], [1126, 456, 1], [1150, 440, .8]],
+  [[1290, 262, .9], [1316, 244, 1.15], [1342, 266, .9]],
+  [[880, 505, .9], [906, 486, 1.15], [932, 510, .85]],
+];
+const forests = [[340, 420, 52, 34, 3], [380, 805, 46, 30, 5], [1305, 515, 48, 30, 7], [905, 765, 56, 30, 9], [705, 545, 34, 44, 11], [520, 470, 22, 40, 13]];
+const islands = [[925, 110, 46, 26, 2], [1035, 66, 22, 14, 4], [600, 905, 52, 30, 6], [1490, 885, 60, 32, 8], [700, 70, 18, 12, 10], [1580, 260, 24, 40, 12]];
+const defaultTeams = [{ id: 1, name: 'Team01' }, { id: 2, name: 'Team02' }, { id: 3, name: 'Team03' }, { id: 4, name: 'Team04' }];
+%>
 <link rel="stylesheet" href="/css/arena.css">
-<section class="arena" data-arena data-api="/scoreboard/data/">
- <header class="arena-head"><div><p class="arena-kicker">WORLD ARENA · ATTACK / DEFENSE</p><h1>World Arena</h1></div><span data-live role="status">Đang kết nối…</span></header>
- <div class="arena-meta"><span data-phase>—</span><span data-tick>Round — / Tick —</span><span id="world-services">Service: chờ dữ liệu</span><strong data-timer>—</strong></div>
+<link rel="stylesheet" href="/css/world.css">
+<section class="arena war" data-arena data-api="/scoreboard/data/">
+ <header class="war-hud">
+  <div class="war-brand"><p class="arena-kicker">MEKODATACTF · ATTACK / DEFENSE</p><h1>World Arena</h1></div>
+  <div class="war-clock" aria-live="off"><span class="war-clock-label" data-banner-label>TICK — ENDS IN</span><strong data-timer>—</strong></div>
+  <dl class="war-stats">
+   <div><dt>Round</dt><dd data-stat-round>—</dd></div>
+   <div><dt>Tick</dt><dd data-tick>—</dd></div>
+   <div><dt>Service UP</dt><dd data-stat-up>—</dd></div>
+   <div><dt>Captures</dt><dd data-stat-captures>—</dd></div>
+  </dl>
+ </header>
+ <div class="war-ribbon"><span class="war-dot" aria-hidden="true"></span><span data-phase>—</span><span class="war-ribbon-note">· Bảng hiển thị tick đã chấm gần nhất</span><span class="war-live" data-live role="status">Đang kết nối…</span><button type="button" class="war-motion" data-motion aria-pressed="true">Hiệu ứng động: BẬT</button></div>
  <progress data-progress value="0" max="120" aria-label="Tiến độ tick"></progress>
+
+ <%- include('partials/beasts') %>
+
+ <div class="world-layout">
+  <div class="world-map">
+   <span id="world-status" role="status"></span>
+   <div class="map-stage" data-default-teams="<%= JSON.stringify(defaultTeams) %>">
+    <svg class="map-svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="map-title" preserveAspectRatio="xMidYMid slice">
+     <title id="map-title">Bản đồ quần đảo giả tưởng: mỗi đội giữ một vùng đất nhỏ trên hai lục địa, biển xanh dưới nắng</title>
+     <defs>
+      <radialGradient id="sea-grad" cx=".98" cy="-.02" r="1.25"><stop offset="0" stop-color="#f2fdff"/><stop offset=".1" stop-color="#b5ecfa"/><stop offset=".38" stop-color="#5ccbec"/><stop offset=".7" stop-color="#2fa6d6"/><stop offset="1" stop-color="#1d7fb4"/></radialGradient>
+      <radialGradient id="sun-grad"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fffbe0"/><stop offset=".6" stop-color="#ffe58a" stop-opacity=".85"/><stop offset="1" stop-color="#ffd24d" stop-opacity="0"/></radialGradient>
+      <radialGradient id="glint-grad"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".5" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      <radialGradient id="lake-grad"><stop offset="0" stop-color="#7fdcf2"/><stop offset="1" stop-color="#2d9cc8"/></radialGradient>
+      <pattern id="wave-pat" width="64" height="36" patternUnits="userSpaceOnUse"><path d="M4 12q7-6 14 0t14 0M34 30q7-6 14 0t14 0" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></pattern>
+      <filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="4" seed="4" result="warp"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="rough-blur" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="4" seed="4" result="warp"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G" result="d"/><feGaussianBlur in="d" stdDeviation="14"/></filter>
+      <filter id="terrain" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+       <feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="4" seed="4" result="warp"/>
+       <feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G" result="shape"/>
+       <feTurbulence type="fractalNoise" baseFrequency=".0045" numOctaves="4" seed="11" result="biomeN"/>
+       <feColorMatrix in="biomeN" type="matrix" values="2.4 0 0 0 -.7  2.4 0 0 0 -.7  2.4 0 0 0 -.7  0 0 0 0 1" result="biomeG"/>
+       <feComponentTransfer in="biomeG" result="biome"><feFuncR type="table" tableValues=".2 .3 .4 .55 .72 .68"/><feFuncG type="table" tableValues=".5 .64 .74 .78 .72 .6"/><feFuncB type="table" tableValues=".16 .18 .2 .28 .4 .4"/></feComponentTransfer>
+       <feComposite in="biome" in2="shape" operator="in" result="colored"/>
+       <feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="5" seed="2" result="reliefN"/>
+       <feDiffuseLighting in="reliefN" surfaceScale="5" diffuseConstant="1.4" lighting-color="#fff4dc" result="light"><feDistantLight azimuth="315" elevation="48"/></feDiffuseLighting>
+       <feBlend in="colored" in2="light" mode="multiply" result="lit"/>
+       <feComposite in="lit" in2="shape" operator="in"/>
+      </filter>
+      <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+      <path id="land-w" d="M90 70C180 30 330 40 420 70C500 95 560 150 545 230C530 300 470 330 480 400C492 470 560 500 555 580C550 660 480 700 470 770C460 840 520 900 470 950C400 990 250 985 170 960C100 935 70 880 95 820C120 760 60 720 70 650C80 580 140 560 120 490C100 420 50 380 60 300C70 220 40 140 90 70Z"/>
+      <path id="land-e" d="M640 300C700 230 820 250 900 230C980 210 1030 160 1120 170C1200 180 1230 230 1310 220C1400 205 1470 160 1530 210C1580 255 1560 330 1540 390C1520 460 1570 520 1545 600C1520 680 1440 700 1380 760C1320 820 1220 850 1140 820C1060 790 1000 840 920 830C840 820 780 760 720 740C660 720 610 660 620 590C630 520 690 480 670 420C650 360 600 350 640 300Z"/>
+      <g id="land-all"><use href="#land-w"/><use href="#land-e"/><% islands.forEach(function (s) { %><path d="<%= blob(s[0], s[1], s[2], s[3], s[4], 9) %>"/><% }) %></g>
+      <clipPath id="land-clip"><use href="#land-w"/><use href="#land-e"/></clipPath>
+     </defs>
+
+     <!-- Biển -->
+     <rect width="1600" height="1000" fill="url(#sea-grad)"/>
+     <g class="sea-waves"><rect x="-80" y="-80" width="1760" height="1160" fill="url(#wave-pat)"/></g>
+     <ellipse cx="1330" cy="150" rx="330" ry="150" transform="rotate(-24 1330 150)" fill="url(#glint-grad)" opacity=".7"/>
+     <g id="sparkles" class="sparkles"></g>
+
+     <!-- Thềm nước nông, bọt sóng, bãi cát, đất liền -->
+     <g filter="url(#rough-blur)" fill="#d4f8ff" stroke="#d4f8ff" stroke-width="70" opacity=".75"><use href="#land-all"/></g>
+     <g filter="url(#rough)" fill="none" stroke="#fff" stroke-width="13" opacity=".8" class="foam"><use href="#land-all"/></g>
+     <g filter="url(#rough)" fill="#f1dd9d" stroke="#f1dd9d" stroke-width="8"><use href="#land-all"/></g>
+     <g filter="url(#terrain)" fill="#000"><use href="#land-all"/></g>
+
+     <!-- Chi tiết địa hình -->
+     <g clip-path="url(#land-clip)">
+      <path d="<%= blob(1110, 560, 72, 34, 21, 10) %>" fill="#e8d796" transform="translate(0 2)"/>
+      <path d="<%= blob(1110, 560, 66, 30, 21, 10) %>" fill="url(#lake-grad)" stroke="#e9fbff" stroke-width="2"/>
+      <g fill="none" stroke="#3aa8d6" stroke-width="5" stroke-linecap="round" opacity=".85"><path d="M545 600C500 610 470 640 440 690"/><path d="M1110 592C1090 650 1080 720 1060 822"/><path d="M60 300C110 290 160 250 190 210"/><path d="M1540 390C1490 400 1470 440 1430 470"/></g>
+      <% forests.forEach(function (f) { %><g class="forest"><path d="<%= blob(f[0], f[1], f[2], f[3], f[4], 9) %>" fill="#2f6b2a" opacity=".55"/><% for (let i = 0; i < 14; i++) { const a = i * 2.39996, r = Math.sqrt(i / 14) * Math.min(f[2], f[3]) * .85; %><circle cx="<%= (f[0] + Math.cos(a) * r * f[2] / Math.min(f[2], f[3])).toFixed(1) %>" cy="<%= (f[1] + Math.sin(a) * r).toFixed(1) %>" r="<%= 6 + (i % 3) %>" fill="#2c5f22"/><circle cx="<%= (f[0] + Math.cos(a) * r * f[2] / Math.min(f[2], f[3]) + 2).toFixed(1) %>" cy="<%= (f[1] + Math.sin(a) * r - 2).toFixed(1) %>" r="<%= 3 + (i % 2) %>" fill="#5c9a3a"/><% } %></g><% }) %>
+      <% ranges.forEach(function (range) { range.forEach(function (m) { const p = mountain(m[0], m[1], m[2]); %><path d="<%= p.dark %>" fill="#6d6450"/><path d="<%= p.light %>" fill="#b3a684"/><path d="<%= p.snow %>" fill="#fbfbf6"/><% }) }) %>
+     </g>
+
+     <g id="outposts" class="outposts"></g>
+     <g id="territories" class="territories" clip-path="url(#land-clip)"></g>
+
+     <!-- Mặt trời -->
+     <circle cx="1580" cy="-40" r="420" fill="url(#sun-grad)" opacity=".35"/>
+     <circle cx="1580" cy="-40" r="120" fill="url(#sun-grad)"/>
+
+     <!-- Máy chủ trò chơi -->
+     <g class="radar" transform="translate(610 160)">
+      <circle r="58" fill="#06303a" fill-opacity=".55" stroke="#bafff0" stroke-opacity=".8" stroke-width="2"/>
+      <circle r="38" fill="none" stroke="#bafff0" stroke-opacity=".45"/><circle r="18" fill="none" stroke="#bafff0" stroke-opacity=".45"/>
+      <path d="M-58 0H58M0-58V58" stroke="#bafff0" stroke-opacity=".3"/>
+      <g class="radar-sweep"><path d="M0 0L58 0A58 58 0 0 0 41 -41Z" fill="#7dffd8" fill-opacity=".35"/></g>
+      <circle r="4" fill="#bafff0"/>
+      <text y="80" text-anchor="middle" class="map-label map-label--server">GAMESERVER</text>
+     </g>
+
+     <g class="map-label">
+      <text x="760" y="200">THE PACKET SEA</text>
+      <text x="1090" y="100">OVERFLOW OCEAN</text>
+      <text x="598" y="640" transform="rotate(-82 598 640)">NULL STRAIT</text>
+      <text x="760" y="935">BAY OF BUFFERS</text>
+      <text x="1220" y="925">SEA OF SHELLS</text>
+      <text x="1040" y="610" class="map-label--lake">MOSS LAKE</text>
+     </g>
+     <g class="map-ticks" aria-hidden="true">
+      <% for (let i = 1; i < 16; i++) { %><text x="<%= i * 100 %>" y="22"><%= i %></text><% } %>
+      <% 'ABCDEFGHI'.split('').forEach(function (c, i) { %><text x="10" y="<%= (i + 1) * 100 + 5 %>"><%= c %></text><% }) %>
+     </g>
+     <g class="map-scale" transform="translate(40 965)"><path d="M0 0H120M0-6V6M60-5V5M120-6V6" stroke="#fff" stroke-width="2"/><text x="0" y="-11">0</text><text x="52" y="-11">50</text><text x="104" y="-11">100 KM</text></g>
+    </svg>
+
+    <div class="map-atmo" aria-hidden="true">
+     <div class="sun-glow"></div>
+     <div class="rays"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+     <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+    </div>
+    <div class="map-bases" id="map-bases"></div>
+    <svg class="fx-svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+     <defs><filter id="fx-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+     <g id="fx-layer" class="fx-layer"></g>
+    </svg>
+   </div>
+   <p class="map-caption">Simulated effects only · Hiệu ứng mô phỏng theo dữ liệu đã chấm, không thể hiện đội nào đang thực sự tấn công đội nào</p>
+  </div>
+
+  <aside class="war-side">
+   <div class="world-ranking arena-board">
+    <table>
+     <caption>Bảng xếp hạng trực tiếp</caption>
+     <thead><tr><th scope="col">Hạng</th><th scope="col">Đội</th><th scope="col">Tổng</th><th scope="col">SLA</th><th scope="col">Attack</th><th scope="col">Defense</th></tr></thead>
+     <tbody data-ranking><tr><td colspan="6">Đang tải điểm…</td></tr></tbody>
+    </table>
+   </div>
+   <section class="war-rules" aria-labelledby="rules-title">
+    <h2 id="rules-title">Luật điểm</h2>
+    <ul>
+     <li><span class="lg lg-hit" aria-hidden="true"></span><b>Tấn công trúng:</b> mỗi flag của một lỗ hổng <em data-rule-attack>+100</em> cho đội tấn công, đội bị chiếm flag <em class="neg" data-rule-victim>−100</em>.</li>
+     <li><span class="lg lg-sla" aria-hidden="true"></span><b>SLA:</b> giữ dịch vụ qua hết một tick <em data-rule-sla>+100</em> · bật khiên.</li>
+     <li><span class="lg lg-down" aria-hidden="true"></span><b>Service down:</b> mỗi tick bị trừ <em class="neg" data-rule-down>100 × (số đội còn lại)</em>.</li>
+     <li><span class="lg lg-block" aria-hidden="true"></span><b>Phòng thủ:</b> flag hết hạn, sai định dạng hoặc đã nộp rồi → đạn bị khiên chặn, không đổi điểm.</li>
+    </ul>
+    <p class="arena-note">Số nổi trên căn cứ là biến động thật lấy từ ForcAD giữa hai lần cập nhật.</p>
+   </section>
+   <section class="war-roster" aria-labelledby="roster-title">
+    <h2 id="roster-title">Linh thú các đội</h2>
+    <ul id="world-roster"></ul>
+   </section>
+  </aside>
+ </div>
  <p data-updated class="arena-note">Chờ dữ liệu cuộc thi.</p>
- <div class="world-layout"><div class="world-map"><span id="world-status" role="status"></span><svg viewBox="0 0 1000 700" role="img" aria-labelledby="map-title"><title id="map-title">Bản đồ giả tưởng: núi Sói, rừng Hổ, cao nguyên Đại bàng và hồ Gấu</title><defs><pattern id="sea" width="35" height="35" patternUnits="userSpaceOnUse"><path d="M0 18h10m12 0h5" stroke="#243a42" stroke-width="1"/></pattern><pattern id="forest" width="28" height="32" patternUnits="userSpaceOnUse"><path d="M14 3L4 23h20z" fill="#304536"/><path d="M14 21v7" stroke="#667052"/></pattern><symbol id="wolf" viewBox="0 0 60 60"><path d="M8 8l18 10h8L52 8l-3 31-19 15L11 39zM18 29l8 4-9 3m25-7-8 4 9 3M25 42h10l-5 6z" fill="none" stroke="currentColor" stroke-width="3"/></symbol><symbol id="tiger" viewBox="0 0 60 60"><path d="M13 16L8 5l16 9h12L52 5l-5 11 5 14-8 18-14 8-14-8L8 30zM16 23l10 5-12 4m30-9-10 5 12 4M24 39h12l-6 8zM30 15v14" fill="none" stroke="currentColor" stroke-width="3"/></symbol><symbol id="eagle" viewBox="0 0 60 60"><path d="M3 15l20 10 7-17 7 17 20-10-7 19-13 5-7 17-7-17-13-5zM23 25l7 9 7-9" fill="none" stroke="currentColor" stroke-width="3"/></symbol><symbol id="bear" viewBox="0 0 60 60"><path d="M14 19C0 12 11 0 21 13h18C49 0 60 12 46 19l5 13-8 18-13 6-13-6-8-18zM19 29h5m12 0h5M23 40h14l-7 9z" fill="none" stroke="currentColor" stroke-width="3"/></symbol></defs><rect width="1000" height="700" fill="#15272f"/><rect width="1000" height="700" fill="url(#sea)"/><path d="M100 115l90-50 153 20 98-25 170 27 100-16 140 100 40 180-70 78 20 131-143 77-160-28-145 42-180-52-42-95-88-45-18-170z" fill="#353c33" stroke="#74806b" stroke-width="3"/><path class="territory wolf" d="M100 115l90-50 153 20 98-25 45 250-140 56-208-37-23-79z"/><path class="territory tiger" d="M441 60l170 27 100-16 140 100 40 180-183 19-222-60z"/><path class="territory eagle" d="M138 329l208 37 140-56 20 205-73 156-180-52-42-95-88-45z"/><path class="territory bear" d="M486 310l222 60 183-19-70 78 20 131-143 77-160-28-105 62 73-156z"/><g fill="none" stroke="#b2a980" stroke-width="2" stroke-dasharray="6 8" opacity=".5"><path d="M441 60l45 250 20 205-73 156M138 329l208 37 140-56 222 60 183-19"/></g><path d="M475 90c-15 140 85 165 20 250s90 160 45 260" stroke="#4b7680" stroke-width="13" fill="none"/><g fill="#788178" stroke="#a5b1a0" stroke-width="2"><path d="M145 230l60-95 65 95zM215 210l75-120 85 120zM320 245l50-80 60 80z"/></g><g fill="#c1cab8"><path d="M177 180l28-45 30 45-30-10zM263 133l27-43 29 43-29-9z"/></g><path d="M600 130l120 10 80 90-20 90-165-15-52-75z" fill="url(#forest)"/><path d="M205 430l80-30 105 45-25 105-95 30-70-65z" fill="#655e43" stroke="#8a8160" stroke-width="3"/><path d="M638 461c90-55 165-20 130 45s-150 85-150 15z" fill="#365d64" stroke="#54767a" stroke-width="3"/><g fill="none" stroke="#c6c2a0" opacity=".22" stroke-width="1.5"><path d="M186 425l98-43 124 55-24 121-118 39-82-79zM204 444l78-34 103 39-20 91-93 36-61-65zM227 459l57-26 75 29-16 62-66 27-45-47z"/><path d="M630 481q60-30 111 0m-108 15q48-22 99-4m-87 20q30-12 62-6"/><path d="M152 235l40-65m55 41 32-66m58 98 28-46"/></g><g fill="#34463f" stroke="#647565" stroke-width="1"><path d="M60 350l22-16 14 27-23 19zM910 470l27-22 13 40-25 13zM469 650l12-8 13 18-19 15z"/></g><g fill="#b4b9a2" font-family="monospace" font-size="12" letter-spacing="3"><text x="210" y="108">FROSTFANG RIDGE</text><text x="620" y="112">EMBERWOOD</text><text x="190" y="600">SUNSPIRE PLATEAU</text><text x="630" y="585">MOSSWATER LAKE</text></g><defs><marker id="attack-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ead09d"/></marker></defs><g id="capture-paths" fill="none" stroke-width="3"/></svg><article tabindex="0" class="map-base wolf" data-team="team01"><svg viewBox="0 0 60 60" aria-label="Sói"><use href="#wolf"/></svg><div><h2>Team01</h2><p>Frostfang</p><strong data-base-score>—</strong><span data-base-rank>Hạng —</span><svg class="base-shield" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L21 6v7c0 5-9 9-9 9s-9-4-9-9V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg><p data-base-status>CHƯA CÓ DỮ LIỆU</p></div></article><article tabindex="0" class="map-base tiger" data-team="team02"><svg viewBox="0 0 60 60" aria-label="Hổ"><use href="#tiger"/></svg><div><h2>Team02</h2><p>Emberwood</p><strong data-base-score>—</strong><span data-base-rank>Hạng —</span><svg class="base-shield" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L21 6v7c0 5-9 9-9 9s-9-4-9-9V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg><p data-base-status>CHƯA CÓ DỮ LIỆU</p></div></article><article tabindex="0" class="map-base eagle" data-team="team03"><svg viewBox="0 0 60 60" aria-label="Đại bàng"><use href="#eagle"/></svg><div><h2>Team03</h2><p>Sunspire</p><strong data-base-score>—</strong><span data-base-rank>Hạng —</span><svg class="base-shield" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L21 6v7c0 5-9 9-9 9s-9-4-9-9V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg><p data-base-status>CHƯA CÓ DỮ LIỆU</p></div></article><article tabindex="0" class="map-base bear" data-team="team04"><svg viewBox="0 0 60 60" aria-label="Gấu"><use href="#bear"/></svg><div><h2>Team04</h2><p>Mosswater</p><strong data-base-score>—</strong><span data-base-rank>Hạng —</span><svg class="base-shield" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L21 6v7c0 5-9 9-9 9s-9-4-9-9V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg><p data-base-status>CHƯA CÓ DỮ LIỆU</p></div></article><div class="map-compass" aria-hidden="true">N<br>╋</div><p class="map-caption">BẢN ĐỒ GIẢ TƯỞNG · CĂN CỨ CỐ ĐỊNH · KHÔNG BIỂU THỊ QUYỀN KIỂM SOÁT</p></div><div class="world-ranking arena-board"><table><caption>Bảng xếp hạng trực tiếp</caption><thead><tr><th scope="col">Hạng</th><th scope="col">Đội</th><th scope="col">Tổng</th><th scope="col">SLA</th><th scope="col">Attack</th><th scope="col">Defense</th></tr></thead><tbody data-ranking><tr><td colspan="6">Đang tải điểm…</td></tr></tbody></table></div></div>
- <p class="arena-note">Defense là điểm phạt có thể âm. Thứ hạng bằng điểm được hiển thị đồng hạng.</p>
-<div class="world-bottom"><section><h2>Capture ledger</h2><div id="world-feed">Chờ dữ liệu capture…</div></section><section><h2>Checker chronicle</h2><details><summary>Trạng thái gần nhất theo service</summary><div id="world-service-details"></div></details><div id="world-checks">Chờ dữ liệu checker…</div><p class="arena-note">SLA được lưu theo đội/tick. Backend chưa lưu thời gian phản hồi và trạng thái từng service theo tick.</p></section></div></section><script src="/js/arena.js" defer></script>
-<link rel="stylesheet" href="/css/world.css"><script src="/js/world.js" defer></script><section class="world-submit arena"><h2>Nộp flag</h2><form id="world-submit"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Team token <input name="token" type="password" autocomplete="off" required></label><label>Flag (mỗi dòng một flag)<textarea name="flags" required rows="3"></textarea></label><button type="submit">Nộp flag</button><button type="reset">Xóa token và flag</button></form><pre id="world-submit-result" role="status"></pre></section>
+
+ <div class="world-bottom">
+  <section><h2>Nhật ký chiến trường</h2><div id="world-feed" role="log" aria-live="polite">Chờ dữ liệu capture…</div></section>
+  <section><h2>Checker chronicle</h2><details><summary>Trạng thái gần nhất theo service <span id="world-services"></span></summary><div id="world-service-details"></div></details><div id="world-checks">Chờ dữ liệu checker…</div></section>
+ </div>
+
+ <section class="world-submit" aria-labelledby="submit-title">
+  <h2 id="submit-title">Nộp flag</h2>
+  <form id="world-submit">
+   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+   <label>Team token <input name="token" type="password" autocomplete="off" required></label>
+   <label>Flag (mỗi dòng một flag)<textarea name="flags" required rows="3"></textarea></label>
+   <fieldset class="submit-fx">
+    <legend>Hiệu ứng trên bản đồ (tùy chọn, không gửi lên ForcAD)</legend>
+    <label>Đội của bạn <select id="fx-attacker"><option value="">—</option></select></label>
+    <label>Đội mục tiêu <select id="fx-victim"><option value="">—</option></select></label>
+   </fieldset>
+   <button type="submit">Nộp flag</button><button type="reset">Xóa token và flag</button>
+  </form>
+  <pre id="world-submit-result" role="status"></pre>
+ </section>
+</section>
+
+<template id="base-template">
+ <article tabindex="0" class="map-base">
+  <div class="base-emblem">
+   <span class="base-pad" aria-hidden="true"></span>
+   <div class="base-beast"></div>
+   <svg class="base-shield" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/><path d="M50 4l40 23v46L50 96 10 73V27z"/></svg>
+   <svg class="base-shield-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#shield"/></svg>
+   <span class="base-crown" aria-hidden="true">♛</span>
+   <span class="base-smoke" aria-hidden="true"><i></i><i></i><i></i></span>
+  </div>
+  <div class="base-plate"><h2></h2><strong data-base-score>—</strong><span data-base-rank>Hạng —</span></div>
+  <p class="base-badge" data-base-status>CHƯA CÓ DỮ LIỆU</p>
+  <div class="base-floats" aria-hidden="true"></div>
+ </article>
+</template>
+<script src="/js/arena.js" defer></script>
+<script src="/js/world.js" defer></script>

@@ -9,7 +9,9 @@ for (const endpoint of ['tick-status','teams','arena']) {
    const response = await fetch(new URL('/api/client/'+endpoint+'/',origin),{signal:AbortSignal.timeout(6000),redirect:'error'});
    if (!response.ok) throw Error('upstream');
    const data = await response.json();
-   if (endpoint === 'arena') return res.json({services:data.services,captures:data.captures,checks:data.checks});
+   // defends: feed tùy chọn các lần nộp flag bị chặn (hết hạn/sai định dạng/trùng); chỉ giữ trường công khai.
+   const defends = Array.isArray(data.defends) ? data.defends.slice(0,50).map(x => ({tick:x.tick,attacker:x.attacker,victim:x.victim,service:x.service,reason:x.reason,time:x.time})) : [];
+   if (endpoint === 'arena') return res.json({services:data.services,captures:data.captures,checks:data.checks,defends});
    if (endpoint === 'teams') return res.json(data.map(t => ({id:t.id,name:t.name})));
    return res.json({mode:data.mode,round:data.round,tick:data.tick,phase:data.phase,deadline:data.deadline,tick_seconds:data.tick_seconds,ticks_per_round:data.ticks_per_round,max_rounds:data.max_rounds,scores:data.scores,results:data.results,running:data.running,overall_tick:data.overall_tick});
   } catch (_) {res.status(503).json({error:'Scoreboard temporarily unavailable'});}
