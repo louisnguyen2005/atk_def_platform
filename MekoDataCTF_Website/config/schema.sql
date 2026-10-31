@@ -14,6 +14,10 @@ CREATE TABLE IF NOT EXISTS teams (
   name        TEXT    NOT NULL UNIQUE COLLATE NOCASE,
   school      TEXT    NOT NULL DEFAULT '',
   phone       TEXT    NOT NULL DEFAULT '',
+  -- Token đội: cấp khi tạo đội, dùng để thành viên đăng nhập và nộp flag (khớp token đội trên ForcAD).
+  token       TEXT,
+  -- Tên đội tương ứng trên ForcAD (để trống = trùng tên đội); dùng khi đồng bộ token.
+  forcad_name TEXT    NOT NULL DEFAULT '',
   created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
   updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );

@@ -1,37 +1,41 @@
-<section class="section">
-  <div class="container">
-    <h1><%= t('admin.title') %></h1>
-    <%- include('../partials/admin-nav') %>
-
-    <p class="muted"><%= t('admin.bodyHint') %></p>
-
-    <form action="/admin/contents" method="post" class="form">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-
-      <% sections.forEach(function (key) { %>
-        <details class="card content-block" <%= key === 'hero' ? 'open' : '' %>>
-          <summary><strong><%= t('admin.sections.' + key) %></strong> <span class="muted mono">#<%= key %></span></summary>
-          <div class="grid-2">
-            <% ['vi', 'en'].forEach(function (l) { %>
-              <div class="lang-col">
-                <p class="lang-tag mono"><%= l.toUpperCase() %></p>
-                <label>
-                  <span><%= t('admin.sectionTitle') %></span>
-                  <input type="text" name="contents[<%= key %>][<%= l %>][title]" value="<%= contents[l][key].title %>" maxlength="200">
-                </label>
-                <label>
-                  <span><%= t('admin.sectionBody') %></span>
-                  <textarea name="contents[<%= key %>][<%= l %>][body]" rows="8"><%= contents[l][key].body %></textarea>
-                </label>
-              </div>
-            <% }) %>
-          </div>
-        </details>
-      <% }) %>
-
-      <div class="form-actions sticky-actions">
-        <button type="submit" class="btn btn-primary"><%= t('admin.save') %></button>
-      </div>
-    </form>
+<div class="a-card">
+  <div class="a-card-body">
+    <p class="a-hint"><%= t('admin.bodyHint') %></p>
   </div>
-</section>
+</div>
+
+<form action="/admin/contents" method="post">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <% sections.forEach(function (key) { %>
+    <details class="a-section" <%= key === 'hero' ? 'open' : '' %>>
+      <summary>
+        <%= t('admin.sections.' + key) %>
+        <code>#<%= key %></code>
+      </summary>
+      <div class="a-langs">
+        <% ['vi', 'en'].forEach(function (l) { %>
+          <div class="a-lang">
+            <span class="a-lang-tag"><%= l.toUpperCase() %></span>
+            <label class="a-field-block">
+              <span><%= t('admin.sectionTitle') %></span>
+              <input type="text" name="contents[<%= key %>][<%= l %>][title]" value="<%= contents[l][key].title %>" maxlength="200">
+            </label>
+            <label class="a-field-block">
+              <span><%= t('admin.sectionBody') %></span>
+              <textarea name="contents[<%= key %>][<%= l %>][body]" rows="8"><%= contents[l][key].body %></textarea>
+            </label>
+          </div>
+        <% }) %>
+      </div>
+    </details>
+  <% }) %>
+
+  <div class="a-sticky-save">
+    <p class="a-hint"><%= t('admin.contentsHint2') %></p>
+    <button type="submit" class="a-btn a-btn-primary">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <%= t('admin.save') %>
+    </button>
+  </div>
+</form>

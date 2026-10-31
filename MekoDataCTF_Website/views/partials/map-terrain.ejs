@@ -1,0 +1,99 @@
+<%#
+  Nền tĩnh của World Arena: biển, nắng, thềm nước nông, bãi cát, địa hình, rừng, núi, sông, hồ.
+  Không dùng trực tiếp trên trang: scripts/bake-map.js dựng file này thành ảnh 1280–3840px
+  (public/images/map/terrain-*.jpg) và mặt nạ vùng biển (sea-mask.png).
+  Biến: m = config/arenaMap.js, mode = 'terrain' | 'seamask'.
+%><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 <%= m.W %> <%= m.H %>" width="<%= m.W %>" height="<%= m.H %>">
+ <defs>
+  <path id="land-w" d="<%= m.LAND_W %>"/>
+  <path id="land-e" d="<%= m.LAND_E %>"/>
+  <g id="land-all"><use xlink:href="#land-w"/><use xlink:href="#land-e"/><% m.islandPaths().forEach(function (d) { %><path d="<%= d %>"/><% }) %></g>
+  <clipPath id="land-clip"><use xlink:href="#land-w"/><use xlink:href="#land-e"/></clipPath>
+  <filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="5" seed="4" result="warp"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G"/></filter>
+<% if (mode === 'seamask') { %>
+  <mask id="sea-only" maskUnits="userSpaceOnUse" x="0" y="0" width="<%= m.W %>" height="<%= m.H %>">
+   <rect width="<%= m.W %>" height="<%= m.H %>" fill="#fff"/>
+   <g filter="url(#rough)" fill="#000" stroke="#000" stroke-width="16"><use xlink:href="#land-all"/></g>
+  </mask>
+ </defs>
+ <rect width="<%= m.W %>" height="<%= m.H %>" fill="#fff" mask="url(#sea-only)"/>
+<% } else { %>
+  <radialGradient id="sea-grad" cx=".98" cy="-.02" r="1.25"><stop offset="0" stop-color="#f4fdff"/><stop offset=".1" stop-color="#b9edfb"/><stop offset=".36" stop-color="#5fcdee"/><stop offset=".68" stop-color="#2ea7d8"/><stop offset="1" stop-color="#1a7bb2"/></radialGradient>
+  <radialGradient id="sun-grad"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fffbe0"/><stop offset=".6" stop-color="#ffe58a" stop-opacity=".85"/><stop offset="1" stop-color="#ffd24d" stop-opacity="0"/></radialGradient>
+  <radialGradient id="glint-grad"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset=".5" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <radialGradient id="lake-grad"><stop offset="0" stop-color="#8fe3f5"/><stop offset="1" stop-color="#2a98c6"/></radialGradient>
+  <linearGradient id="peak-light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9cfb0"/><stop offset="1" stop-color="#9d8f6b"/></linearGradient>
+  <linearGradient id="peak-dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7f7660"/><stop offset="1" stop-color="#5a5242"/></linearGradient>
+  <!-- Gợn sóng mảnh trên mặt biển -->
+  <filter id="sea-tex" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+   <feTurbulence type="fractalNoise" baseFrequency=".005 .05" numOctaves="5" seed="8" result="n"/>
+   <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  2.6 0 0 0 -1.25"/>
+  </filter>
+  <!-- Vùng biển sâu/nông xen kẽ -->
+  <filter id="sea-depth" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+   <feTurbulence type="fractalNoise" baseFrequency=".0025" numOctaves="3" seed="21" result="n"/>
+   <feColorMatrix in="n" type="matrix" values="0 0 0 0 .04  0 0 0 0 .2  0 0 0 0 .38  2.2 0 0 0 -.95"/>
+  </filter>
+  <filter id="rough-blur" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="5" seed="4" result="warp"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G" result="d"/><feGaussianBlur in="d" stdDeviation="16"/></filter>
+  <filter id="rough-soft" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="5" seed="4" result="warp"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G" result="d"/><feGaussianBlur in="d" stdDeviation="3"/></filter>
+  <!-- Địa hình: màu thảm thực vật theo nhiễu + đổ bóng nổi khối theo hướng mặt trời -->
+  <filter id="terrain" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+   <feTurbulence type="fractalNoise" baseFrequency=".009" numOctaves="5" seed="4" result="warp"/>
+   <feDisplacementMap in="SourceGraphic" in2="warp" scale="26" xChannelSelector="R" yChannelSelector="G" result="shape"/>
+   <feTurbulence type="fractalNoise" baseFrequency=".0045" numOctaves="5" seed="11" result="biomeN"/>
+   <feColorMatrix in="biomeN" type="matrix" values="2.4 0 0 0 -.7  2.4 0 0 0 -.7  2.4 0 0 0 -.7  0 0 0 0 1" result="biomeG"/>
+   <feComponentTransfer in="biomeG" result="biome"><feFuncR type="table" tableValues=".17 .25 .33 .45 .62 .66"/><feFuncG type="table" tableValues=".45 .6 .7 .75 .72 .62"/><feFuncB type="table" tableValues=".13 .15 .17 .22 .34 .38"/></feComponentTransfer>
+   <feComposite in="biome" in2="shape" operator="in" result="colored"/>
+   <!-- đồi lớn (nhiễu tần số thấp) + bề mặt chi tiết (tần số cao, nhẹ) -->
+   <feDiffuseLighting in="biomeN" surfaceScale="26" diffuseConstant="1.32" lighting-color="#fff6e2" result="hills"><feDistantLight azimuth="315" elevation="42"/></feDiffuseLighting>
+   <feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="6" seed="2" result="reliefN"/>
+   <feDiffuseLighting in="reliefN" surfaceScale="2.2" diffuseConstant="1.22" lighting-color="#ffffff" result="light"><feDistantLight azimuth="315" elevation="56"/></feDiffuseLighting>
+   <feBlend in="colored" in2="hills" mode="multiply" result="shaded"/>
+   <feBlend in="shaded" in2="light" mode="multiply" result="lit"/>
+   <feComposite in="lit" in2="shape" operator="in"/>
+  </filter>
+  <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="2.5"/></filter>
+ </defs>
+
+ <!-- Biển -->
+ <rect width="<%= m.W %>" height="<%= m.H %>" fill="url(#sea-grad)"/>
+ <rect width="<%= m.W %>" height="<%= m.H %>" filter="url(#sea-depth)" opacity=".55"/>
+ <rect width="<%= m.W %>" height="<%= m.H %>" filter="url(#sea-tex)" opacity=".13"/>
+ <ellipse cx="1330" cy="150" rx="340" ry="155" transform="rotate(-24 1330 150)" fill="url(#glint-grad)" opacity=".75"/>
+
+ <!-- Thềm nước nông, bọt sóng, bãi cát, đất liền -->
+ <g filter="url(#rough-blur)" fill="#c9f6ff" stroke="#c9f6ff" stroke-width="96" opacity=".45"><use xlink:href="#land-all"/></g>
+ <g filter="url(#rough-blur)" fill="#e1fbff" stroke="#e1fbff" stroke-width="46" opacity=".7"><use xlink:href="#land-all"/></g>
+ <g filter="url(#rough-soft)" fill="none" stroke="#fff" stroke-width="11" opacity=".85"><use xlink:href="#land-all"/></g>
+ <g filter="url(#rough)" fill="#e9d394" stroke="#e9d394" stroke-width="9"><use xlink:href="#land-all"/></g>
+ <g filter="url(#rough)" fill="#f6e7b4" stroke="#f6e7b4" stroke-width="4"><use xlink:href="#land-all"/></g>
+ <g filter="url(#terrain)" fill="#000"><use xlink:href="#land-all"/></g>
+
+ <!-- Chi tiết địa hình -->
+ <g clip-path="url(#land-clip)">
+  <% const L = m.LAKE; %>
+  <path d="<%= m.blob(L[0], L[1], L[2] + 7, L[3] + 5, L[4], 10) %>" fill="#e8d796"/>
+  <path d="<%= m.blob(L[0], L[1], L[2], L[3], L[4], 10) %>" fill="url(#lake-grad)" stroke="#f0fcff" stroke-width="2.5"/>
+  <g fill="none" stroke-linecap="round">
+   <% m.RIVERS.forEach(function (d) { %><path d="<%= d %>" stroke="#e7f3d6" stroke-width="9" opacity=".55"/><path d="<%= d %>" stroke="#3aa8d6" stroke-width="5"/><path d="<%= d %>" stroke="#9fe3f6" stroke-width="1.6"/><% }) %>
+  </g>
+  <% m.FORESTS.forEach(function (f) { const k = f[2] / Math.min(f[2], f[3]); %>
+  <path d="<%= m.blob(f[0], f[1], f[2], f[3], f[4], 9) %>" fill="#2f6b2a" opacity=".5"/>
+  <% for (let i = 0; i < 26; i++) { const a = i * 2.39996, r = Math.sqrt(i / 26) * Math.min(f[2], f[3]) * .9, x = f[0] + Math.cos(a) * r * k, y = f[1] + Math.sin(a) * r, s = 4.5 + (i % 3) * 1.3; %>
+  <ellipse cx="<%= (x - 2).toFixed(1) %>" cy="<%= (y + s * .7).toFixed(1) %>" rx="<%= s.toFixed(1) %>" ry="<%= (s * .55).toFixed(1) %>" fill="#1d3d17" opacity=".45" filter="url(#soft-shadow)"/>
+  <circle cx="<%= x.toFixed(1) %>" cy="<%= y.toFixed(1) %>" r="<%= s.toFixed(1) %>" fill="#2a5b20"/>
+  <circle cx="<%= (x + s * .3).toFixed(1) %>" cy="<%= (y - s * .3).toFixed(1) %>" r="<%= (s * .6).toFixed(1) %>" fill="#4f8f33"/>
+  <circle cx="<%= (x + s * .45).toFixed(1) %>" cy="<%= (y - s * .45).toFixed(1) %>" r="<%= (s * .28).toFixed(1) %>" fill="#86c25a"/>
+  <% } }) %>
+  <% m.RANGES.forEach(function (range) { range.forEach(function (p) { const t = m.mountain(p[0], p[1], p[2]); %>
+  <ellipse cx="<%= p[0] - 10 * p[2] %>" cy="<%= p[1] + 2 %>" rx="<%= 26 * p[2] %>" ry="<%= 6 * p[2] %>" fill="#2c3a1e" opacity=".35" filter="url(#soft-shadow)"/>
+  <path d="<%= t.dark %>" fill="url(#peak-dark)"/><path d="<%= t.light %>" fill="url(#peak-light)"/><path d="<%= t.snow %>" fill="#fdfdf8"/>
+  <path d="M<%= p[0] %> <%= p[1] - 30 * p[2] %>L<%= p[0] + 3 * p[2] %> <%= p[1] %>" stroke="#4d4636" stroke-width="1" opacity=".5"/>
+  <% }) }) %>
+ </g>
+
+ <!-- Mặt trời -->
+ <circle cx="<%= m.SUN[0] %>" cy="<%= m.SUN[1] %>" r="460" fill="url(#sun-grad)" opacity=".32"/>
+ <circle cx="<%= m.SUN[0] %>" cy="<%= m.SUN[1] %>" r="130" fill="url(#sun-grad)"/>
+<% } %>
+</svg>

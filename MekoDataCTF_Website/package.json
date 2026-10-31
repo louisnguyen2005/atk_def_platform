@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "bake:map": "node scripts/bake-map.js",
+    "sync:forcad": "node scripts/sync-forcad-tokens.js"
   },
   "engines": {
     "node": ">=18"
@@ -24,5 +26,9 @@
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.1",
     "helmet": "^8.0.0"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "jpeg-js": "^0.4.4"
   }
 }

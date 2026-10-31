@@ -1,18 +1,27 @@
 import {
-    statusColors,
-    defaultStatusColor,
+    statusTheme,
+    defaultStatusTheme,
     topTeamColors,
     defaultTeamColor,
 } from '@/config';
 
-function getTeamRowBackground(index) {
+// Màu huy hiệu hạng: vàng / bạc / đồng cho top 3, còn lại dùng màu trung tính.
+function getRankColor(index) {
     return index < topTeamColors.length
         ? topTeamColors[index]
         : defaultTeamColor;
 }
 
-function getTeamTaskBackground(status) {
-    return statusColors[status] ? statusColors[status] : defaultStatusColor;
+function getStatusTheme(status) {
+    return statusTheme[status] || defaultStatusTheme;
 }
 
-export { getTeamRowBackground, getTeamTaskBackground };
+function getStatusAccent(status) {
+    return getStatusTheme(status).accent;
+}
+
+function getStatusBackground(status) {
+    return getStatusTheme(status).bg;
+}
+
+export { getRankColor, getStatusTheme, getStatusAccent, getStatusBackground };

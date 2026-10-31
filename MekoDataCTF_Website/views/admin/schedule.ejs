@@ -1,51 +1,69 @@
-<section class="section">
-  <div class="container">
-    <h1><%= t('admin.title') %></h1>
-    <%- include('../partials/admin-nav') %>
+<%- include('../partials/errors') %>
 
-    <div class="card narrow-card">
-      <%- include('../partials/errors') %>
-      <form action="/admin/schedule" method="post" class="form">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+<form action="/admin/schedule" method="post" class="a-card a-form a-form-narrow">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-        <label class="switch">
-          <input type="checkbox" name="registration_open" value="1" <%= settings.registration_open === '1' ? 'checked' : '' %>>
-          <span><%= t('admin.registrationOpen') %></span>
-        </label>
+  <fieldset class="a-fieldset">
+    <legend class="a-legend"><%= t('admin.registrationStatus') %></legend>
+    <label class="a-switch">
+      <input type="checkbox" name="registration_open" value="1" <%= settings.registration_open === '1' ? 'checked' : '' %>>
+      <span class="a-switch-track" aria-hidden="true"></span>
+      <span class="a-switch-text">
+        <b><%= t('admin.registrationOpen') %></b>
+        <small><%= t('admin.registrationOpenHint') %></small>
+      </span>
+    </label>
+  </fieldset>
 
-        <div class="grid-2">
-          <label>
-            <span><%= t('admin.registrationDeadline') %></span>
-            <input type="datetime-local" name="registration_deadline" value="<%= settings.registration_deadline %>" required>
-          </label>
-          <span></span>
-          <label>
-            <span><%= t('admin.contestStart') %></span>
-            <input type="datetime-local" name="contest_start" value="<%= settings.contest_start %>" required>
-          </label>
-          <label>
-            <span><%= t('admin.contestEnd') %></span>
-            <input type="datetime-local" name="contest_end" value="<%= settings.contest_end %>" required>
-          </label>
-          <label>
-            <span><%= t('admin.minMembers') %></span>
-            <input type="number" name="min_members" value="<%= settings.min_members %>" min="1" max="10" required>
-          </label>
-          <label>
-            <span><%= t('admin.maxMembers') %></span>
-            <input type="number" name="max_members" value="<%= settings.max_members %>" min="1" max="10" required>
-          </label>
-        </div>
-
-        <label>
-          <span><%= t('admin.location') %></span>
-          <input type="text" name="event_location" value="<%= settings.event_location %>" maxlength="200">
-        </label>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary"><%= t('admin.save') %></button>
-        </div>
-      </form>
+  <fieldset class="a-fieldset">
+    <legend class="a-legend"><%= t('admin.scheduleGroupTime') %></legend>
+    <div class="a-fields">
+      <label class="a-field-block">
+        <span><%= t('admin.registrationDeadline') %></span>
+        <input type="datetime-local" name="registration_deadline" value="<%= settings.registration_deadline %>" required>
+      </label>
+      <span></span>
+      <label class="a-field-block">
+        <span><%= t('admin.contestStart') %></span>
+        <input type="datetime-local" name="contest_start" value="<%= settings.contest_start %>" required>
+      </label>
+      <label class="a-field-block">
+        <span><%= t('admin.contestEnd') %></span>
+        <input type="datetime-local" name="contest_end" value="<%= settings.contest_end %>" required>
+      </label>
     </div>
+  </fieldset>
+
+  <fieldset class="a-fieldset">
+    <legend class="a-legend"><%= t('admin.scheduleGroupTeam') %></legend>
+    <div class="a-fields">
+      <label class="a-field-block">
+        <span><%= t('admin.minMembers') %></span>
+        <input type="number" name="min_members" value="<%= settings.min_members %>" min="1" max="<%= settings.max_members %>" required>
+      </label>
+      <label class="a-field-block">
+        <span><%= t('admin.maxMembers') %></span>
+        <input type="number" value="<%= settings.max_members %>" disabled>
+        <small><%= t('admin.maxMembersFixed') %></small>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="a-fieldset">
+    <legend class="a-legend"><%= t('admin.scheduleGroupEvent') %></legend>
+    <div class="a-fields a-fields-1">
+      <label class="a-field-block">
+        <span><%= t('admin.location') %></span>
+        <input type="text" name="event_location" value="<%= settings.event_location %>" maxlength="200">
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="a-card-foot">
+    <p class="a-hint"><%= t('admin.contentsHint2') %></p>
+    <button type="submit" class="a-btn a-btn-primary">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <%= t('admin.save') %>
+    </button>
   </div>
-</section>
+</form>

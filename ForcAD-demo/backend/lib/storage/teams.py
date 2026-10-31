@@ -76,10 +76,26 @@ def create_team(team: models.Team) -> models.Team:
 def update_team(team: models.Team) -> models.Team:
     """Update team, reset cache & return updated instance."""
     with storage.utils.db_cursor() as (conn, curs):
+        curs.execute('SELECT token FROM Teams WHERE id=%s', (team.id,))
+        row = curs.fetchone()
         curs.execute(team.get_update_query(), team.to_dict())
         conn.commit()
 
     storage.caching.flush_teams_cache()
+
+    # Khóa team:token:<token> không bị xóa khi flush cache đội, nên khi đổi token
+    # (vd. đồng bộ token từ website MekoDataCTF) phải tự gỡ token cũ, nếu không
+    # token cũ vẫn nộp flag được. Token mới được ghi ngay để nộp flag không phải chờ dựng lại cache.
+    old_token = row[0] if row else None
+    with storage.utils.redis_pipeline(transaction=True) as pipe:
+        if old_token and old_token != team.token:
+            pipe.delete(CacheKeys.team_by_token(old_token))
+        if team.active:
+            pipe.set(CacheKeys.team_by_token(team.token), team.id)
+        else:
+            pipe.delete(CacheKeys.team_by_token(team.token))
+        pipe.execute()
+
     return team
 
 

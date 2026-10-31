@@ -1,21 +1,37 @@
 (function () {
   'use strict';
 
-  // ----- Menu di động -----
-  var toggle = document.querySelector('[data-nav-toggle]');
-  var nav = document.querySelector('[data-nav]');
-  if (toggle && nav) {
-    toggle.addEventListener('click', function () {
-      var open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-  }
-
   // ----- Xác nhận trước khi xóa -----
   document.querySelectorAll('form[data-confirm]').forEach(function (form) {
     form.addEventListener('submit', function (e) {
       if (!window.confirm(form.getAttribute('data-confirm'))) e.preventDefault();
     });
+  });
+
+  // ----- Token đội: hiện/ẩn và sao chép -----
+  document.querySelectorAll('[data-token-value]').forEach(function (box) {
+    var root = box.closest('.token-box');
+    var toggle = root && root.querySelector('[data-token-toggle]');
+    var copy = root && root.querySelector('[data-token-copy]');
+    var token = box.getAttribute('data-token-value');
+    var masked = box.textContent;
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var showing = box.textContent === token;
+        box.textContent = showing ? masked : token;
+        toggle.textContent = showing ? toggle.dataset.show : toggle.dataset.hide;
+      });
+    }
+    if (copy) {
+      copy.addEventListener('click', function () {
+        var label = copy.textContent;
+        var done = function () {
+          copy.textContent = copy.dataset.copied;
+          setTimeout(function () { copy.textContent = label; }, 1600);
+        };
+        if (navigator.clipboard) navigator.clipboard.writeText(token).then(done, function () {});
+      });
+    }
   });
 
   // ----- Đồng hồ đếm ngược -----

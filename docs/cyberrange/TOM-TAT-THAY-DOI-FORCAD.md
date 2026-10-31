@@ -112,3 +112,54 @@ Kiểm thử: 5 test đều pass. Có mô phỏng đủ 15 tick và 180 flag duy
 - `round1-lab/test_round1.py` và `round1-lab/README.md`: kiểm thử và hướng dẫn cập nhật theo 120 giây.
 - Đã cập nhật trận đang dừng tại tick 9: thời lượng cấu hình 120 giây, phần còn lại của tick được tăng 60 giây (giữ 8.8 giây đang còn); điểm, flag và tick giữ nguyên. Làm mới cache flag để áp dụng TTL mới.
 - Build và khởi động lại ticker, client API, nginx. Kiểm thử riêng: 5/5 pass. Cuộc thi vẫn dừng, không sinh flag mới.
+
+## 9. Thiết kế lại bảng điểm ForcAD (giao diện quản trị)
+
+Bảng điểm mà ban tổ chức xem ở `http://127.0.0.1:18080/admin/` là ứng dụng Vue trong `ForcAD-demo/front/`. Trang `/` công khai không dùng bảng này: `front/public/tick-display.js` gắn class `arena-admin` vào `body` và `arena.css` ẩn `#app`, thay bằng panel "Live arena" riêng.
+
+| File | Thay đổi |
+|---|---|
+| `front/src/config/index.js` | Thay `statusColors` bằng `statusTheme` (mỗi trạng thái có màu nhấn + nền pha loãng cho giao diện tối); màu huy hiệu hạng 1–3. |
+| `front/src/utils/colors.js` | Thay `getTeamRowBackground`/`getTeamTaskBackground` bằng `getRankColor`, `getStatusAccent`, `getStatusBackground`. |
+| `front/src/assets/table.scss` | Token màu dùng chung (`--bg`, `--panel`, `--line`, `--text`, `--accent-teal`, `--mono`, `--sans`) và khung lưới CSS Grid của bảng; bỏ bố cục flex cũ. |
+| `front/src/components/Lib/ScoreTable.vue` | Mỗi đội là một thẻ: huy hiệu hạng, tên + IP, tổng điểm (font mono). Mỗi dịch vụ là một ô có viền trái theo màu trạng thái, nhãn trạng thái, SLA kèm thanh tiến độ, điểm và số flag cướp/mất. Nút sửa và nút xem thông báo checker chỉ hiện khi rê chuột. |
+| `front/src/components/General/Statuses.vue` | Chú giải trạng thái dạng chip tròn thay cho dải màu đặc. |
+| `front/src/components/General/Topbar.vue` | Thanh trên có tên giải, tick tổng và tiến độ tick chạy nền. |
+| `front/src/views/AdminScoreboard.vue` | Thêm tiêu đề trang và nút "Thêm dịch vụ" / "Thêm đội"; hiện cả chú giải trạng thái. |
+| `front/src/components/Scores/TeamScoreboard.vue`, `front/src/components/Admin/TeamTaskLog.vue` | Dùng chung bảng màu mới; log checker chuyển thành bảng có hàng tiêu đề dính. |
+| `front/src/App.vue`, `front/src/components/Lib/Container.vue` | Nền tối, font Inter + JetBrains Mono, `box-sizing: border-box`, bề ngang tối đa 1680px. |
+
+### Build lại được
+
+Trước đây `front/dist` chứa các file tự thêm (`arena.css`, `arena.js`, `round-control.js`, `tick-display.js`, `submit.html`) và một `index.html` đã sửa tay — chạy `npm run build` sẽ xóa mất chúng. Nay:
+
+- Các file đó nằm ở `front/public/`, Vite tự chép sang `dist` khi build.
+- `front/index.html` (đầu vào của Vite) đã có sẵn tiêu đề, `arena.css` và hai thẻ script.
+
+```powershell
+cd ForcAD-demo\front
+npm install
+npm run build
+```
+
+Sau khi build, nạp lại bundle cho nginx trong thư mục `ForcAD-demo`:
+
+```powershell
+docker compose up -d --no-deps nginx
+```
+
+Chỉ sửa giao diện nên không cần reset cuộc thi hay build lại backend. Đã kiểm thử giao diện bằng một ForcAD giả lập cục bộ (6 đội, 4 dịch vụ, đủ 5 trạng thái); chưa chạy với ForcAD thật.
+
+## 10. Token đội do website cấp (đăng nhập thành viên & nộp flag)
+
+Website MekoDataCTF cấp token đội khi đội trưởng tạo đội; thành viên đăng nhập và nộp flag bằng token đó (chi tiết ở README website, mục "Token đội"). Để ForcAD cộng điểm đúng đội, token website được đẩy sang ForcAD bằng `npm run sync:forcad -- --apply`.
+
+| File | Thay đổi |
+|---|---|
+| `ForcAD-demo/backend/lib/storage/teams.py` | `update_team` đọc token cũ trước khi cập nhật; sau khi commit thì xóa khóa Redis `team:token:<token cũ>` và ghi ngay khóa token mới. Đội bị đặt `active=false` qua cập nhật cũng bị gỡ khóa token. |
+
+Lỗi đã sửa: `flush_teams_cache` chỉ xóa tập `teams`, không xóa khóa `team:token:*`, mà bộ nhận flag tra đội bằng chính khóa này. Vì vậy trước đây đổi token đội qua API quản trị thì **token cũ vẫn nộp flag được** cho tới khi Redis khởi động lại, còn token mới chỉ dùng được sau khi cache đội được dựng lại.
+
+Kiểm thử: unit test giả lập DB/Redis cho `update_team` (token mới dùng được, token cũ bị từ chối, giữ nguyên token vẫn dùng được, đội ngừng hoạt động bị từ chối) — 3/3 đạt với bản sửa, 2/3 thất bại với bản cũ. Chưa chạy trên ForcAD thật (Docker Desktop đang tắt). `update_team` chỉ được gọi từ API quản trị, nên chỉ cần build lại và khởi động lại container `admin-api` (`docker compose build admin-api` rồi `docker compose up -d --no-deps admin-api` trong `ForcAD-demo`) trước khi chạy đồng bộ token.
+
+Sau khi round1 "tái tạo", ForcAD sinh lại token đội (`round1.py`), nên phải chạy lại `npm run sync:forcad -- --apply` để người chơi tiếp tục dùng token cũ của website.

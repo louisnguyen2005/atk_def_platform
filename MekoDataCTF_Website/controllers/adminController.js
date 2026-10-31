@@ -59,17 +59,16 @@ exports.saveSchedule = (req, res) => {
     contest_end: String(req.body.contest_end || ''),
     event_location: String(req.body.event_location || '').trim().slice(0, 200),
     min_members: String(parseInt(req.body.min_members, 10)),
-    max_members: String(parseInt(req.body.max_members, 10)),
   };
 
+  // Số tối đa cố định (Setting.MAX_MEMBERS); chỉ số tối thiểu được chỉnh, trong khoảng 1..tối đa.
   const start = new Date(values.contest_start);
   const end = new Date(values.contest_end);
   const deadline = new Date(values.registration_deadline);
   const min = Number(values.min_members);
-  const max = Number(values.max_members);
   const valid =
     !isNaN(start) && !isNaN(end) && !isNaN(deadline) && end > start &&
-    Number.isInteger(min) && Number.isInteger(max) && min >= 1 && max <= 10 && min <= max;
+    Number.isInteger(min) && min >= 1 && min <= Setting.MAX_MEMBERS;
 
   if (!valid) {
     return res.status(400).render('admin/schedule', {
@@ -100,6 +99,28 @@ exports.deleteTeam = (req, res) => {
   Team.delete(Number(req.params.id));
   req.flash('success', req.t('admin.deleted'));
   res.redirect('/admin/teams');
+};
+
+// Token bị lộ: cấp token mới (thành viên đăng nhập bằng token cũ bị đăng xuất ở request kế tiếp).
+exports.regenerateToken = (req, res, next) => {
+  const team = Team.findBasic(Number(req.params.id));
+  if (!team) return next();
+  Team.regenerateToken(team.id);
+  req.flash('success', req.t('admin.tokenRegenerated'));
+  res.redirect(`/admin/teams/${team.id}`);
+};
+
+exports.saveForcadName = (req, res, next) => {
+  const team = Team.findBasic(Number(req.params.id));
+  if (!team) return next();
+  const forcadName = String(req.body.forcad_name || '').trim();
+  if (forcadName.length > 50) {
+    req.flash('error', req.t('admin.forcadInvalid'));
+  } else {
+    Team.setForcadName(team.id, forcadName);
+    req.flash('success', req.t('admin.forcadSaved'));
+  }
+  res.redirect(`/admin/teams/${team.id}`);
 };
 
 // ----- Xuất file -----

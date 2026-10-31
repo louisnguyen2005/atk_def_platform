@@ -1,6 +1,19 @@
 const router = require('express').Router();
+const arena = require('../services/arenaService');
+const arenaMap = require('../config/arenaMap');
+const Team = require('../models/Team');
+const { sessionTeam } = require('../middlewares/auth');
 const origin = process.env.FORCAD_URL || 'http://127.0.0.1:18080';
-router.get('/scoreboard', (req,res) => res.render('scoreboard',{title:'WORLD ARENA',worldGamePage:true}));
+
+router.get('/scoreboard', (req,res) => {
+ // Đội đang đăng nhập (đội trưởng hoặc thành viên token): form nộp flag dùng token của đội này.
+ const session = sessionTeam(req);
+ const submitTeam = session ? {name:session.team.name, arenaKey:Team.forcadNameOf(session.team).toLowerCase()} : null;
+ res.render('scoreboard',{title:'WORLD ARENA',worldGamePage:true,arenaMap,zodiac:arena.ZODIAC,submitTeam});
+});
+// Trạng thái gộp (điểm, đội + con giáp, service, capture, checker): SSE đẩy trực tiếp, JSON + ETag làm dự phòng.
+router.get('/scoreboard/stream', (req,res) => arena.subscribe(req,res));
+router.get('/scoreboard/state', (req,res) => arena.sendState(req,res).catch(() => res.status(503).json({ok:false,error:'Scoreboard temporarily unavailable'})));
 // Fixed read-only upstream routes: never relay cookies, credentials or admin APIs.
 for (const endpoint of ['tick-status','teams','arena']) {
  router.get('/scoreboard/data/'+endpoint, async (req,res) => {
@@ -17,10 +30,14 @@ for (const endpoint of ['tick-status','teams','arena']) {
   } catch (_) {res.status(503).json({error:'Scoreboard temporarily unavailable'});}
  });
 }
+// Nộp flag: token lấy từ đội của phiên đăng nhập (không nhận token từ trình duyệt),
+// nên ForcAD luôn cộng điểm cho đúng đội đang đăng nhập.
 router.post('/scoreboard/submit', async(req,res)=>{
- const {token,flags}=req.body||{};
  res.set('Cache-Control','no-store');
- if(typeof token!=='string'||token.length>128||!Array.isArray(flags)||flags.length<1||flags.length>100||flags.some(f=>typeof f!=='string'||f.length>100))return res.status(400).json({error:'Kiểm tra token và danh sách flag (tối đa 100).'});
- try{const upstream=await fetch(new URL('/flags/',origin),{method:'PUT',headers:{'Content-Type':'application/json','X-Team-Token':token},body:JSON.stringify(flags),signal:AbortSignal.timeout(8000),redirect:'error'});res.status(upstream.status).json(await upstream.json());}catch(_){res.status(503).json({error:'Bộ nhận flag chưa kết nối được.'});}
+ const session = sessionTeam(req);
+ if(!session)return res.status(401).json({error:'Đăng nhập bằng tài khoản đội trưởng hoặc token đội để nộp flag.'});
+ const {flags}=req.body||{};
+ if(!Array.isArray(flags)||flags.length<1||flags.length>100||flags.some(f=>typeof f!=='string'||f.length>100))return res.status(400).json({error:'Kiểm tra danh sách flag (tối đa 100).'});
+ try{const upstream=await fetch(new URL('/flags/',origin),{method:'PUT',headers:{'Content-Type':'application/json','X-Team-Token':session.team.token},body:JSON.stringify(flags),signal:AbortSignal.timeout(8000),redirect:'error'});res.status(upstream.status).json(await upstream.json());}catch(_){res.status(503).json({error:'Bộ nhận flag chưa kết nối được.'});}
 });
 module.exports=router;

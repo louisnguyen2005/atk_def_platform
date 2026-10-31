@@ -1,0 +1,94 @@
+<%
+// Khung riêng cho khu quản trị BTC: sidebar cố định + thanh tiêu đề + vùng nội dung.
+// Không dùng ảnh nền/footer của trang công khai để bảng điều khiển dễ đọc.
+const icons = {
+  dashboard: '<path d="M4 13h6V4H4zM4 20h6v-5H4zM14 20h6v-9h-6zM14 9h6V4h-6z"/>',
+  contents: '<path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+  schedule: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  teams: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16 5.6a3.2 3.2 0 0 1 0 6.3M17.5 19.5a5.6 5.6 0 0 0-2.2-4.4"/>',
+};
+const nav = [
+  { href: '/admin', key: 'dashboard', exact: true },
+  { href: '/admin/teams', key: 'teams' },
+  { href: '/admin/schedule', key: 'schedule' },
+  { href: '/admin/contents', key: 'contents' },
+];
+const path = currentPath || '/admin';
+const isActive = (item) => (item.exact ? path === item.href || path === item.href + '/' : path.startsWith(item.href));
+const active = nav.find(isActive) || nav[0];
+%><!doctype html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280">
+  <title><%= t('admin.' + active.key) %> · <%= t('admin.title') %></title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a href="/" class="admin-brand">
+      <img src="/images/favicon.svg" alt="" width="30" height="30">
+      <span><strong>Meko<em>Data</em>CTF</strong><small><%= t('admin.workspace') %></small></span>
+    </a>
+
+    <nav class="admin-nav" aria-label="<%= t('admin.title') %>">
+      <% nav.forEach(function (item) { %>
+      <a href="<%= item.href %>" class="<%= isActive(item) ? 'active' : '' %>" <%= isActive(item) ? 'aria-current="page"' : '' %>>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><%- icons[item.key] %></svg>
+        <%= t('admin.' + item.key) %>
+      </a>
+      <% }) %>
+    </nav>
+
+    <div class="admin-side-foot">
+      <a href="/" class="admin-sidelink">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg>
+        <%= t('admin.backToSite') %>
+      </a>
+      <div class="admin-user">
+        <span class="admin-avatar" aria-hidden="true"><%= (user && user.email ? user.email[0] : 'A').toUpperCase() %></span>
+        <span class="admin-user-text">
+          <small><%= t('admin.signedInAs') %></small>
+          <b title="<%= user ? user.email : '' %>"><%= user ? user.email : '' %></b>
+        </span>
+      </div>
+      <form action="/logout" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="admin-logout">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 8l-4 4 4 4M6 12h9"/></svg>
+          <%= t('nav.logout') %>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-top">
+      <div class="admin-top-text">
+        <h1><%= t('admin.' + active.key) %></h1>
+        <p><%= t('admin.desc.' + active.key) %></p>
+      </div>
+      <div class="admin-top-side">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <a href="<%= langUrl('vi') %>" class="<%= lang === 'vi' ? 'active' : '' %>">VI</a>
+          <a href="<%= langUrl('en') %>" class="<%= lang === 'en' ? 'active' : '' %>">EN</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <%- include('../partials/flash') %>
+      <%- body %>
+    </main>
+  </div>
+</div>
+<script src="/js/main.js" defer></script>
+</body>
+</html>

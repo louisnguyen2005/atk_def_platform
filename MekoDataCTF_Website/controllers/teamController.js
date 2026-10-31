@@ -1,6 +1,7 @@
 const Team = require('../models/Team');
 const Member = require('../models/Member');
 const Setting = require('../models/Setting');
+const { sessionTeam } = require('../middlewares/auth');
 
 const STUDENT_ID_RE = /^[A-Za-z0-9]{4,15}$/;
 const PHONE_RE = /^[0-9+\s().-]{8,20}$/;
@@ -24,7 +25,7 @@ function parseForm(body) {
 function validate(req, data, settings, teamId = 0) {
   const t = req.t;
   const min = Number(settings.min_members) || 1;
-  const max = Number(settings.max_members) || 4;
+  const max = Setting.MAX_MEMBERS;
   const errors = [];
 
   if (data.name.length < 2 || data.name.length > 50) errors.push(t('team.errors.nameRequired'));
@@ -57,17 +58,19 @@ function formView(req, res, { team, data, errors = [], status = 200 }) {
     data,
     errors,
     minMembers: Number(settings.min_members) || 1,
-    maxMembers: Number(settings.max_members) || 4,
+    maxMembers: Setting.MAX_MEMBERS,
   });
 }
 
 exports.show = (req, res) => {
-  const team = Team.findByUser(req.user.id);
-  if (!team) return res.redirect('/team/edit');
+  const session = sessionTeam(req);
+  if (!session) return res.redirect(req.user && req.user.role === 'admin' ? '/admin' : '/team/edit');
+  const isCaptain = session.role === 'captain';
   res.render('team/show', {
     title: req.t('team.title'),
-    team,
-    canEdit: Setting.isRegistrationOpen(),
+    team: Team.findById(session.team.id),
+    isCaptain,
+    canEdit: isCaptain && Setting.isRegistrationOpen(),
   });
 };
 

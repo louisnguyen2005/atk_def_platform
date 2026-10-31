@@ -1,25 +1,91 @@
-<section class="section">
-  <div class="container narrow">
-    <a href="/admin/teams" class="muted"><%= t('admin.back') %></a>
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <p class="section-kicker mono"><%= t('admin.teamDetail') %></p>
-          <h1><%= team.name %></h1>
-        </div>
-        <form action="/admin/teams/<%= team.id %>/delete" method="post" data-confirm="<%= t('admin.confirmDelete') %>">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button type="submit" class="btn btn-danger"><%= t('admin.delete') %></button>
-        </form>
+<a href="/admin/teams" class="a-back">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+  <%= t('admin.back') %>
+</a>
+
+<section class="a-card">
+  <div class="a-team-head">
+    <div class="a-team-id">
+      <span class="a-team-ini" aria-hidden="true"><%= team.name.trim().charAt(0).toUpperCase() %></span>
+      <div>
+        <h2><%= team.name %></h2>
+        <p><%= t('admin.teamDetail') %> · <%= team.members.length %> <%= t('admin.teamMembers').toLowerCase() %></p>
       </div>
-      <dl class="details">
-        <dt><%= t('team.email') %></dt><dd><%= team.email %></dd>
-        <dt><%= t('team.school') %></dt><dd><%= team.school || '—' %></dd>
-        <dt><%= t('team.phone') %></dt><dd><%= team.phone || '—' %></dd>
-        <dt><%= t('team.registeredAt') %></dt><dd class="mono"><%= team.created_at %> UTC</dd>
-      </dl>
-      <h2 class="form-section-title"><%= t('team.members') %> (<%= team.members.length %>)</h2>
-      <%- include('../partials/members-table', { members: team.members }) %>
     </div>
+    <form action="/admin/teams/<%= team.id %>/delete" method="post" data-confirm="<%= t('admin.confirmDelete') %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="a-btn a-btn-danger">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M6.5 7l.8 12.1a1 1 0 0 0 1 .9h7.4a1 1 0 0 0 1-.9L17.5 7"/></svg>
+        <%= t('admin.delete') %>
+      </button>
+    </form>
   </div>
+
+  <div class="a-card-body">
+    <dl class="a-list">
+      <div><dt><%= t('team.email') %></dt><dd><%= team.email %></dd></div>
+      <div><dt><%= t('team.school') %></dt><dd><%= team.school || '—' %></dd></div>
+      <div><dt><%= t('team.phone') %></dt><dd class="a-mono"><%= team.phone || '—' %></dd></div>
+      <div><dt><%= t('team.registeredAt') %></dt><dd class="a-mono"><%= team.created_at %> UTC</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="a-card">
+  <div class="a-card-head">
+    <div>
+      <h2><%= t('admin.tokenTitle') %></h2>
+      <p><%= t('admin.tokenHint') %></p>
+    </div>
+    <form action="/admin/teams/<%= team.id %>/token" method="post" data-confirm="<%= t('admin.confirmRegenerate') %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="a-btn a-btn-soft a-btn-sm">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>
+        <%= t('admin.regenerateToken') %>
+      </button>
+    </form>
+  </div>
+  <div class="a-card-body a-token-grid">
+    <div class="token-box a-token-box">
+      <div class="token-box-head">
+        <span class="a-legend"><%= t('admin.tokenTitle') %></span>
+        <div class="token-actions">
+          <button type="button" class="a-btn a-btn-ghost a-btn-sm" data-token-toggle data-show="<%= t('team.tokenShow') %>" data-hide="<%= t('team.tokenHide') %>"><%= t('team.tokenShow') %></button>
+          <button type="button" class="a-btn a-btn-soft a-btn-sm" data-token-copy data-copied="<%= t('team.tokenCopied') %>"><%= t('team.tokenCopy') %></button>
+        </div>
+      </div>
+      <code class="token-value" data-token-value="<%= team.token %>">••••••••••••••••</code>
+    </div>
+    <form action="/admin/teams/<%= team.id %>/forcad" method="post" class="a-forcad-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="a-field-block">
+        <span><%= t('admin.forcadName') %></span>
+        <input type="text" name="forcad_name" value="<%= team.forcad_name %>" maxlength="50" placeholder="<%= team.name %>">
+        <small><%= t('admin.forcadNameHint') %></small>
+      </label>
+      <button type="submit" class="a-btn a-btn-primary a-btn-sm"><%= t('admin.save') %></button>
+    </form>
+  </div>
+</section>
+
+<section class="a-card">
+  <div class="a-card-head">
+    <div><h2><%= t('team.members') %></h2></div>
+    <span class="a-count"><%= team.members.length %></span>
+  </div>
+  <table class="a-table">
+    <thead>
+      <tr><th class="num">#</th><th><%= t('team.fullName') %></th><th><%= t('team.studentId') %></th><th class="right"></th></tr>
+    </thead>
+    <tbody>
+      <% team.members.forEach(function (m, i) { %>
+        <tr>
+          <td class="num"><%= i + 1 %></td>
+          <td><b><%= m.full_name %></b></td>
+          <td class="a-mono"><%= m.student_id %></td>
+          <td class="right"><% if (m.is_leader) { %><span class="a-pill a-pill-info"><%= t('team.leader') %></span><% } %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
 </section>

@@ -1,56 +1,70 @@
-<section class="section">
-  <div class="container">
-    <h1><%= t('admin.title') %></h1>
-    <%- include('../partials/admin-nav') %>
-
-    <div class="toolbar">
-      <form action="/admin/teams" method="get" class="search-form">
-        <input type="search" name="q" value="<%= q %>" placeholder="<%= t('admin.search') %>">
-        <button type="submit" class="btn btn-outline"><%= t('admin.searchBtn') %></button>
-      </form>
-      <div class="export-actions">
-        <a href="/admin/export.xlsx" class="btn btn-primary"><%= t('admin.exportXlsx') %></a>
-        <a href="/admin/export.csv" class="btn btn-outline"><%= t('admin.exportCsv') %></a>
-      </div>
-    </div>
-
-    <% if (teams.length === 0) { %>
-      <div class="card"><p class="muted"><%= t('admin.noTeams') %></p></div>
-    <% } else { %>
-      <div class="table-wrap card">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th><%= t('team.name') %></th>
-              <th><%= t('team.email') %></th>
-              <th><%= t('team.school') %></th>
-              <th><%= t('team.members') %></th>
-              <th><%= t('team.registeredAt') %></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% teams.forEach(function (tm, i) { %>
-              <tr>
-                <td><%= i + 1 %></td>
-                <td><a href="/admin/teams/<%= tm.id %>"><strong><%= tm.name %></strong></a></td>
-                <td><%= tm.email %></td>
-                <td><%= tm.school %></td>
-                <td class="mono"><%= tm.member_count %></td>
-                <td class="mono"><%= tm.created_at %></td>
-                <td class="row-actions">
-                  <a href="/admin/teams/<%= tm.id %>" class="btn btn-ghost btn-sm"><%= t('admin.view') %></a>
-                  <form action="/admin/teams/<%= tm.id %>/delete" method="post" class="inline-form" data-confirm="<%= t('admin.confirmDelete') %>">
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <button type="submit" class="btn btn-danger btn-sm"><%= t('admin.delete') %></button>
-                  </form>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-    <% } %>
+<div class="a-toolbar">
+  <form action="/admin/teams" method="get" class="a-search">
+    <label class="a-field">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none"/><path d="M16 16l4 4"/></svg>
+      <input type="search" name="q" value="<%= q %>" placeholder="<%= t('admin.search') %>" aria-label="<%= t('admin.search') %>">
+    </label>
+    <button type="submit" class="a-btn a-btn-primary"><%= t('admin.searchBtn') %></button>
+    <% if (q) { %><a href="/admin/teams" class="a-btn a-btn-soft"><%= t('admin.clearSearch') %></a><% } %>
+  </form>
+  <div class="a-actions">
+    <a href="/admin/export.xlsx" class="a-btn a-btn-primary">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 19h14"/></svg>
+      <%= t('admin.exportXlsx') %>
+    </a>
+    <a href="/admin/export.csv" class="a-btn a-btn-soft"><%= t('admin.exportCsv') %></a>
   </div>
+</div>
+
+<section class="a-card">
+  <div class="a-card-head">
+    <div>
+      <h2><%= t('admin.resultCount').replace('{n}', teams.length) %></h2>
+      <% if (q) { %><p><%= t('admin.searchResult') %> “<%= q %>”</p><% } %>
+    </div>
+  </div>
+  <% if (teams.length === 0) { %>
+    <p class="a-empty"><%= t('admin.noTeams') %></p>
+  <% } else { %>
+    <table class="a-table">
+      <thead>
+        <tr>
+          <th class="num">#</th>
+          <th><%= t('team.name') %></th>
+          <th><%= t('team.school') %></th>
+          <th><%= t('team.members') %></th>
+          <th><%= t('team.registeredAt') %></th>
+          <th class="right"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% teams.forEach(function (tm, i) { %>
+          <tr>
+            <td class="num"><%= i + 1 %></td>
+            <td>
+              <span class="a-name">
+                <span class="a-ini" aria-hidden="true"><%= tm.name.trim().charAt(0).toUpperCase() %></span>
+                <span>
+                  <a href="/admin/teams/<%= tm.id %>"><b><%= tm.name %></b></a>
+                  <span class="a-sub a-block"><%= tm.email %></span>
+                </span>
+              </span>
+            </td>
+            <td><%= tm.school || '—' %></td>
+            <td><span class="a-count"><%= tm.member_count %></span></td>
+            <td class="a-mono a-sub"><%= tm.created_at %></td>
+            <td class="right">
+              <span class="a-actions a-actions-end">
+                <a href="/admin/teams/<%= tm.id %>" class="a-btn a-btn-soft a-btn-sm"><%= t('admin.view') %></a>
+                <form action="/admin/teams/<%= tm.id %>/delete" method="post" class="inline-form" data-confirm="<%= t('admin.confirmDelete') %>">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="a-btn a-btn-danger a-btn-sm"><%= t('admin.delete') %></button>
+                </form>
+              </span>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
 </section>

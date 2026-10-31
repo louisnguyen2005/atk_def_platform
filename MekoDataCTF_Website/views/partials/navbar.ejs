@@ -5,11 +5,7 @@
       <span class="brand-text">Meko<span>Data</span>CTF</span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" data-nav-toggle>
-      <span></span><span></span><span></span>
-    </button>
-
-    <nav class="nav-links" data-nav>
+    <nav class="nav-links">
       <a href="/scoreboard">Scoreboard</a>
       <a href="/#about"><%= t('nav.about') %></a>
       <a href="/#schedule"><%= t('nav.schedule') %></a>
@@ -23,6 +19,12 @@
         <% } else { %>
           <a href="/team" class="<%= currentPath.startsWith('/team') ? 'active' : '' %>"><%= t('nav.myTeam') %></a>
         <% } %>
+        <form action="/logout" method="post" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-ghost btn-sm"><%= t('nav.logout') %></button>
+        </form>
+      <% } else if (memberTeam) { %>
+        <a href="/team" class="<%= currentPath.startsWith('/team') ? 'active' : '' %>" title="<%= memberTeam.name %>"><%= t('nav.myTeam') %></a>
         <form action="/logout" method="post" class="inline-form">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button type="submit" class="btn btn-ghost btn-sm"><%= t('nav.logout') %></button>

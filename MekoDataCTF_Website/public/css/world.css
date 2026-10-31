@@ -4,7 +4,7 @@ body:has(.war){background:#04101a}
 
 .arena.war{--ink:#e6f2f6;--muted:#8fa9b6;--line:#1d3a4b;--panel:#0a1822;--gold:#ffc94d;--red:#ff4d4f;--green:#4fe3b0;
  max-width:1760px;margin:0 auto;min-height:100vh;background:radial-gradient(ellipse at top,#0e2a3e,#04101a 60%);border-top:3px solid var(--gold);color:var(--ink)}
-.beast-defs{position:absolute;width:0;height:0;overflow:hidden}
+.arena-defs{position:absolute;width:0;height:0;overflow:hidden}
 
 /* ---------- HUD ---------- */
 .war-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
@@ -32,33 +32,37 @@ body:has(.war){background:#04101a}
 
 /* ---------- Bố cục ---------- */
 .world-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,400px);gap:22px;margin-top:18px}
-.world-map{position:relative;min-width:0;border:2px solid #10364a;background:#1d7fb4;box-shadow:0 0 0 1px #0a1822,0 18px 50px #00000080}
-.world-map{align-self:start}
-.map-stage{position:relative;aspect-ratio:16/10;overflow:hidden;container-type:inline-size;--emb:7.6cqi}
-.map-stage.dense{--emb:5.4cqi}
-.map-svg,.fx-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.fx-svg{z-index:5;pointer-events:none;overflow:visible}
+.world-map{position:relative;min-width:0;align-self:start;border:2px solid #10364a;background:#1a7bb2;box-shadow:0 0 0 1px #0a1822,0 18px 50px #00000080}
+.map-stage{position:relative;aspect-ratio:16/10;overflow:hidden;container-type:inline-size;--emb:8cqi;isolation:isolate}
+.map-stage.dense{--emb:5.6cqi}
 .map-caption{margin:0;padding:8px 12px;border-top:1px solid #1f4256;font:10px monospace;letter-spacing:1px;color:#9fb9c6;text-align:center;background:#06111a}
 #world-status:not(:empty){position:absolute;z-index:8;top:0;left:0;right:0;padding:8px;background:#513923;color:#ffe1b4;font:11px monospace;text-align:center}
 
-/* Biển & địa hình (SVG) */
-.sea-waves{animation:waves 14s linear infinite}
+/* Nền 4K (ảnh dựng sẵn bằng npm run bake:map) + lớp động chỉ trên mặt biển */
+.map-terrain{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;user-select:none;opacity:0;transition:opacity .6s}
+.map-stage.terrain-ready .map-terrain{opacity:1}
+.map-stage:not(.terrain-ready) .map-sea{opacity:0}
+.map-sea{position:absolute;inset:0;pointer-events:none;-webkit-mask:url(/images/map/sea-mask.png) center/100% 100% no-repeat;mask:url(/images/map/sea-mask.png) center/100% 100% no-repeat}
+.sea-waves{position:absolute;inset:-8%;opacity:.42;will-change:transform;animation:waves 18s linear infinite;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='54'%3E%3Cpath d='M6 18q10-8 20 0t20 0M52 44q10-8 20 0t20 0' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 0 0/6cqi auto}
+.sea-waves--b{opacity:.22;animation-duration:31s;animation-direction:reverse;background-size:9.5cqi auto}
+.sea-sparkles{position:absolute;inset:0;width:100%;height:100%}
 .spark{fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:twinkle 3s ease-in-out infinite}
-.map-label text{font:700 18px Georgia,'Times New Roman',serif;letter-spacing:6px;fill:#ffffff;fill-opacity:.82;paint-order:stroke;stroke:#0d5b80;stroke-opacity:.35;stroke-width:3}
-.map-label .map-label--lake{font-size:12px;letter-spacing:3px;fill-opacity:.9}
+.map-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.map-label text{font:700 18px Georgia,'Times New Roman',serif;letter-spacing:6px;fill:#fff;fill-opacity:.88;paint-order:stroke;stroke:#0d5b80;stroke-opacity:.45;stroke-width:3}
+.map-label .map-label--lake{font-size:12px;letter-spacing:3px}
 .map-label--server{font:700 13px monospace;letter-spacing:3px;fill:#e8fffa;paint-order:stroke;stroke:#05414d;stroke-width:3}
-.map-ticks text{font:12px monospace;fill:#eafaff;fill-opacity:.7}
+.map-ticks text{font:12px monospace;fill:#eafaff;fill-opacity:.75}
 .map-scale text{font:11px monospace;fill:#fff}
 .radar-sweep{transform-box:view-box;transform-origin:0 0;animation:sweep 4s linear infinite}
-.foam{animation:foam 5s ease-in-out infinite}
 
-/* Lãnh thổ từng đội & vùng đất trống */
-.territory{fill-opacity:.38;stroke-width:7;stroke-opacity:1;stroke-dasharray:22 9;stroke-linejoin:round;filter:drop-shadow(0 0 6px #fff8);transition:fill-opacity .4s}
+/* Lãnh thổ & vùng đất trống */
+.territory{fill-opacity:.36;stroke-width:7;stroke-dasharray:22 9;stroke-linejoin:round;filter:drop-shadow(0 0 5px #fff9)}
 .territory.down{stroke:#ff4d4f;fill-opacity:.16;stroke-dasharray:10 8;animation:territory-alert 1.2s steps(2) infinite}
-.outpost circle{fill:#ffffff1a;stroke:#fff;stroke-opacity:.55;stroke-width:2;stroke-dasharray:5 6}
-.outpost path{fill:#ffffffaa;stroke:#ffffffcc;stroke-width:2;stroke-linejoin:round}
+.outpost circle{fill:#ffffff1f;stroke:#fff;stroke-opacity:.65;stroke-width:2;stroke-dasharray:5 6}
+.outpost path{fill:#ffffffbb;stroke:#ffffffdd;stroke-width:2;stroke-linejoin:round}
 
-/* Khí quyển: nắng, tia sáng, mây (lớp HTML để GPU xử lý chuyển động) */
+/* Khí quyển: nắng, tia sáng, mây (lớp HTML, GPU xử lý chuyển động) */
 .map-atmo{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .sun-glow{position:absolute;right:-22%;top:-48%;width:80%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fffbe6cc 0,#fff3b066 18%,#ffe08a22 40%,transparent 66%);mix-blend-mode:screen}
 .rays{position:absolute;right:1%;top:-4%;width:0;height:0}
@@ -70,92 +74,112 @@ body:has(.war){background:#04101a}
 .rays i:nth-child(5){transform:rotate(-129deg);height:14cqi;animation-delay:-3s}
 .rays i:nth-child(6){transform:rotate(-116deg);height:8cqi;animation-delay:-5s}
 .rays i:nth-child(7){transform:rotate(-103deg);animation-delay:-6s}
-.cloud{position:absolute;width:24cqi;height:9cqi;border-radius:50%;opacity:.85;filter:blur(.35cqi);background:radial-gradient(ellipse 34% 52% at 30% 58%,#fff 60%,transparent 62%),radial-gradient(ellipse 30% 60% at 52% 42%,#fff 60%,transparent 62%),radial-gradient(ellipse 30% 46% at 72% 60%,#fff 60%,transparent 62%),radial-gradient(ellipse 46% 30% at 50% 74%,#f2fbff 60%,transparent 62%);animation:drift 150s linear infinite}
+.cloud{position:absolute;left:0;width:24cqi;height:9cqi;border-radius:50%;opacity:.85;filter:blur(.35cqi);will-change:transform;background:radial-gradient(ellipse 34% 52% at 30% 58%,#fff 60%,transparent 62%),radial-gradient(ellipse 30% 60% at 52% 42%,#fff 60%,transparent 62%),radial-gradient(ellipse 30% 46% at 72% 60%,#fff 60%,transparent 62%),radial-gradient(ellipse 46% 30% at 50% 74%,#f2fbff 60%,transparent 62%);animation:drift 150s linear infinite}
 .cloud::after{content:"";position:absolute;inset:0;transform:translate(-2.6cqi,4.2cqi);border-radius:50%;background:radial-gradient(ellipse at center,#04365455 0,transparent 66%);filter:blur(1cqi);z-index:-1}
 .cloud.c1{top:6%;animation-delay:-30s}
 .cloud.c2{top:44%;width:18cqi;height:7cqi;animation-duration:190s;animation-delay:-120s;opacity:.7}
 .cloud.c3{top:74%;width:28cqi;height:10cqi;animation-duration:170s;animation-delay:-70s;opacity:.75}
 
-/* ---------- Căn cứ & linh thú ---------- */
+/* ---------- Căn cứ ---------- */
 .map-bases{position:absolute;inset:0;z-index:3}
-.map-base{--team:#38bdf8;--eye:#ffd166;position:absolute;width:var(--emb);transform:translate(-50%,calc(var(--emb) / -2));display:flex;flex-direction:column;align-items:center;outline:none;color:var(--team)}
-.base-emblem{position:relative;width:100%;aspect-ratio:1;display:grid;place-items:end center}
-.base-pad{position:absolute;left:-14%;right:-14%;bottom:-6%;height:34%;border-radius:50%;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--team) 70%,#fff) 0,color-mix(in srgb,var(--team) 45%,transparent) 42%,transparent 70%);box-shadow:0 0 0 2px color-mix(in srgb,var(--team) 80%,transparent);opacity:.9;animation:pad 3s ease-in-out infinite}
-.base-beast{position:relative;width:130%;margin-bottom:-4%;filter:drop-shadow(0 .35cqi .25cqi #0006);transition:filter .4s}
-.base-beast .beast{display:block;width:100%;height:auto;overflow:visible}
-.map-base:hover .base-beast,.map-base:focus-visible .base-beast{filter:drop-shadow(0 0 .6cqi var(--team)) drop-shadow(0 .35cqi .25cqi #0006)}
-.base-crown{position:absolute;top:-30%;left:50%;transform:translateX(-50%);font-size:calc(var(--emb) * .38);line-height:1;color:var(--gold);text-shadow:0 0 10px #ffc94daa,0 2px 0 #7a5300;opacity:0;transition:opacity .4s}
+.map-base{--team:#38bdf8;--flip:1;--dir:1;--kb:1;position:absolute;width:var(--emb);transform:translate(-50%,calc(var(--emb) * -.62));display:flex;flex-direction:column;align-items:center;outline:none;color:var(--team)}
+.base-emblem{position:relative;width:100%;aspect-ratio:1}
+.base-pad{position:absolute;left:-12%;right:-12%;bottom:-4%;height:30%;border-radius:50%;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--team) 65%,#fff) 0,color-mix(in srgb,var(--team) 40%,transparent) 42%,transparent 70%);box-shadow:0 0 0 2px color-mix(in srgb,var(--team) 85%,transparent),0 0 14px color-mix(in srgb,var(--team) 60%,transparent);opacity:.92;animation:pad 3s ease-in-out infinite}
+.base-crown{position:absolute;top:-20%;left:50%;transform:translateX(-50%);z-index:5;font-size:calc(var(--emb) * .36);line-height:1;color:var(--gold);text-shadow:0 0 10px #ffc94daa,0 2px 0 #7a5300;opacity:0;transition:opacity .4s}
 .map-base.leader .base-crown{opacity:1;animation:bob 2.4s ease-in-out infinite}
-.base-plate{margin-top:4%;padding:1px 7px 2px;text-align:center;white-space:nowrap;background:#04101ae0;border:1px solid color-mix(in srgb,var(--team) 80%,transparent);border-radius:3px;box-shadow:0 2px 8px #0007;display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:center;column-gap:6px}
-.base-plate h2{grid-column:1/-1;margin:0;font:700 clamp(8px,1.05cqi,13px) monospace;letter-spacing:1px;color:var(--team);text-transform:uppercase}
-.base-plate strong{font:800 clamp(10px,1.45cqi,19px) monospace;color:#fff;font-variant-numeric:tabular-nums}
+.base-plate{margin-top:3%;padding:1px 8px 2px;text-align:center;white-space:nowrap;background:#04101ae8;border:1.5px solid color-mix(in srgb,var(--team) 85%,transparent);border-radius:4px;box-shadow:0 2px 10px #0008;display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:center;column-gap:6px;position:relative;z-index:4}
+.base-plate h2{grid-column:1/-1;margin:0;font:800 clamp(8px,1.05cqi,14px) monospace;letter-spacing:1px;color:var(--team);text-transform:uppercase}
+.base-plate strong{font:900 clamp(11px,1.6cqi,22px) monospace;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #0009}
 .base-plate span{font:clamp(7px,.85cqi,11px) monospace;color:var(--muted)}
-.map-base.leader .base-plate{border-color:var(--gold);box-shadow:0 0 10px #ffc94d66}
-.base-badge{margin:3px 0 0;padding:1px 6px;font:700 clamp(6px,.8cqi,10px) monospace;letter-spacing:1px;white-space:nowrap;border-radius:2px;background:#0d3a2ce6;color:#7ff0c5;border:1px solid #2f8f6c}
-.map-base.svc-warn .base-badge{background:#3d2a07e6;color:#ffd27a;border-color:#a77a22}
-.map-base.svc-unknown .base-badge{background:#15232ce6;color:#9fb9c6;border-color:#35505f}
-.map-base.down .base-badge{background:var(--red);color:#fff;border-color:#ff9b9c;animation:blink 1.1s steps(2) infinite}
-
-/* Animation linh thú (toạ độ theo viewBox 160×140 của từng con) */
-.beast .b-eye,.beast .b-core{fill:var(--eye);animation:glow 2.2s ease-in-out infinite}
-.beast .b-body{transform-box:view-box;transform-origin:80px 126px;animation:idle 3s ease-in-out infinite}
-.beast-eagle .w-l{transform-box:view-box;transform-origin:70px 58px;animation:flap-l 1.5s ease-in-out infinite}
-.beast-eagle .w-r{transform-box:view-box;transform-origin:90px 58px;animation:flap-r 1.5s ease-in-out infinite}
-.beast-eagle .b-body{animation:hover-bob 1.5s ease-in-out infinite}
-.beast-eagle .b-head{transform-box:view-box;transform-origin:86px 46px;animation:look 6s ease-in-out infinite}
-.beast-elephant .b-trunk{transform-box:view-box;transform-origin:138px 70px;animation:trunk 3.2s ease-in-out infinite}
-.beast-elephant .b-ear{transform-box:view-box;transform-origin:120px 46px;animation:ear 2.4s ease-in-out infinite}
-.beast-bear .b-chassis{transform-box:view-box;transform-origin:75px 98px;animation:breathe 2.8s ease-in-out infinite}
-.beast-bear .b-head{transform-box:view-box;transform-origin:120px 58px;animation:nod 4s ease-in-out infinite}
-.beast-rex .b-jaw{transform-box:view-box;transform-origin:118px 45px;animation:jaw 3.4s ease-in-out infinite}
-.beast-rex .b-tail{transform-box:view-box;transform-origin:56px 70px;animation:tail 2.6s ease-in-out infinite}
-.beast-rex .b-head{transform-box:view-box;transform-origin:112px 40px;animation:roar-head 3.4s ease-in-out infinite}
-
-/* Trạng thái linh thú */
-.map-base.attacking .base-beast{animation:roar .6s ease-out 2}
-.map-base.attacking .beast *{animation-duration:.5s}
-.map-base.hit .base-beast{animation:shake .45s ease-in-out 3;filter:drop-shadow(0 0 .8cqi #ff3b3b) brightness(1.15) sepia(.4) hue-rotate(-30deg)}
-.map-base.down .base-beast{filter:grayscale(.85) brightness(.62) drop-shadow(0 0 .5cqi #ff4d4f)}
-.map-base.down .beast *{animation-play-state:paused}
-.map-base.down .base-pad{background:radial-gradient(ellipse at center,#ff4d4f88 0,transparent 70%);box-shadow:0 0 0 2px #ff4d4fcc}
-.base-smoke{position:absolute;left:50%;top:10%;width:0;height:0;display:none}
-.map-base.down .base-smoke{display:block}
-.base-smoke i{position:absolute;left:-1cqi;top:0;width:2cqi;height:2cqi;border-radius:50%;background:radial-gradient(circle,#4b4f55cc,#4b4f5500 70%);animation:smoke 2.4s ease-out infinite}
-.base-smoke i:nth-child(2){animation-delay:.8s;left:-.2cqi}
-.base-smoke i:nth-child(3){animation-delay:1.6s;left:-1.6cqi}
-
-/* Khiên */
-.base-shield{position:absolute;left:50%;top:50%;width:190%;height:190%;transform:translate(-50%,-50%) scale(.6);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;overflow:visible;z-index:2}
-.base-shield circle{fill:#7dffe01f;stroke:#7dffe0;stroke-width:2.5}
-.base-shield path{fill:none;stroke:#d9fff6;stroke-width:1.2;stroke-dasharray:6 5;opacity:.85}
-.base-shield-icon{position:absolute;right:-30%;top:-14%;width:42%;height:42%;color:#7dffe0;opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s;filter:drop-shadow(0 0 6px #4fe3b0);z-index:3}
-.map-base.shielded .base-shield,.map-base.blocked .base-shield{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.map-base.shielded .base-shield-icon,.map-base.blocked .base-shield-icon{opacity:1;transform:scale(1)}
-.map-base.shielded .base-shield circle{animation:shield-pulse 1.2s ease-in-out infinite}
-.map-base.blocked .base-shield circle{fill:#e6fffa55;stroke:#fff;stroke-width:4;animation:shield-flash .5s ease-out 2}
-.map-base.down.shielded:not(.blocked) .base-shield,.map-base.down.shielded:not(.blocked) .base-shield-icon{opacity:0}
+.map-base.leader .base-plate{border-color:var(--gold);box-shadow:0 0 12px #ffc94d77}
+.base-badge{position:relative;z-index:4;margin:3px 0 0;padding:1px 7px;font:800 clamp(6px,.82cqi,11px) monospace;letter-spacing:1px;white-space:nowrap;border-radius:2px;background:#0d3a2cee;color:#7ff0c5;border:1px solid #2f8f6c}
+.map-base.svc-warn .base-badge{background:#3d2a07ee;color:#ffd27a;border-color:#a77a22}
+.map-base.svc-unknown .base-badge{background:#15232cee;color:#9fb9c6;border-color:#35505f}
+.map-base.down .base-badge{background:var(--red);color:#fff;border-color:#ffb3b4;box-shadow:0 0 10px #ff4d4f;animation:blink 1.1s steps(2) infinite}
 .map-base:focus-visible .base-plate{outline:2px solid #fff;outline-offset:2px}
 
-/* Số điểm nổi */
-.base-floats{position:absolute;left:50%;top:0;width:0;height:0;pointer-events:none;z-index:6}
-.score-float{position:absolute;left:0;top:0;transform:translate(-50%,0);white-space:nowrap;font:800 clamp(11px,1.7cqi,22px) monospace;text-shadow:0 0 6px #000,0 2px 0 #000;animation:float-up 2.6s ease-out forwards}
-.score-float.pos{color:#7dffb2}.score-float.neg{color:#ff6b6d}.score-float.info{color:#d9fff6}
-.score-float small{font-size:.6em;margin-left:4px;letter-spacing:1px}
+/* ---------- Linh thú 12 con giáp: lớp vị trí (actor) › hướng mặt (facing) › cử động thường (idle) › ảnh ---------- */
+.z-shadow{position:absolute;left:20%;right:20%;bottom:3%;height:11%;border-radius:50%;background:radial-gradient(ellipse,#000a 0,#0000 70%)}
+.z-actor{position:absolute;inset:0;transform-origin:50% 88%;will-change:transform}
+.z-facing{width:100%;height:100%;transform:scaleX(var(--flip));transition:transform .3s cubic-bezier(.3,1.5,.5,1)}
+.z-idle{width:100%;height:100%;transform-origin:50% 92%;animation:idle-breathe calc(var(--d,3s) * var(--idle-speed,1)) ease-in-out var(--idle-delay,0s) infinite}
+.z-img{display:block;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none;user-select:none;filter:drop-shadow(0 .2cqi .12cqi #0008) drop-shadow(0 0 .25cqi #fff6);transition:filter .3s}
+.map-base:hover .z-img,.map-base:focus-visible .z-img{filter:drop-shadow(0 0 .7cqi var(--team)) drop-shadow(0 .2cqi .12cqi #0008)}
+/* Kiểu cử động theo con giáp (config/zodiac.js) */
+.z-hop{--d:3.4s}.z-hop .z-idle{animation-name:idle-hop}.z-hop .z-shadow{animation:shadow-hop calc(var(--d) * var(--idle-speed,1)) ease-in-out var(--idle-delay,0s) infinite}
+.z-stomp{--d:4.4s}.z-stomp .z-idle{animation-name:idle-stomp}
+.z-prowl{--d:5s}.z-prowl .z-idle{animation-name:idle-prowl}
+.z-stretch{--d:6s}.z-stretch .z-idle{animation-name:idle-stretch}
+.z-float{--d:3.8s}.z-float .z-idle{animation-name:idle-float}.z-float .z-shadow{animation:shadow-float calc(var(--d) * var(--idle-speed,1)) ease-in-out var(--idle-delay,0s) infinite}
+.z-slither{--d:2.4s}.z-slither .z-idle{animation-name:idle-slither}
+.z-prance{--d:5.2s}.z-prance .z-idle{animation-name:idle-prance;transform-origin:72% 92%}
+.z-graze{--d:5s}.z-graze .z-idle{animation-name:idle-graze}
+.z-peck{--d:3s}.z-peck .z-idle{animation-name:idle-peck;transform-origin:56% 92%}
+.z-wag{--d:2.8s}.z-wag .z-idle{animation-name:idle-wag}
 
-/* ---------- Hiệu ứng đạn ---------- */
+/* Sự kiện: lấy đà → lao tới → (trúng) nhảy ăn mừng | bị trúng: bật lùi | bị chặn: thủ thế */
+.map-base.windup .z-actor{animation:windup .32s ease-in forwards}
+.map-base.lunge .z-actor{animation:lunge .52s cubic-bezier(.2,.8,.3,1)}
+.map-base.celebrate .z-actor{animation:celebrate 1.9s cubic-bezier(.33,.7,.4,1);transform-origin:50% 65%}
+.map-base.celebrate .z-shadow{animation:shadow-celebrate 1.9s cubic-bezier(.33,.7,.4,1)}
+.map-base.celebrate .z-img{filter:drop-shadow(0 0 .9cqi var(--team)) drop-shadow(0 0 .3cqi #fff) brightness(1.12)}
+.map-base.knockback .z-actor{animation:knockback .9s cubic-bezier(.2,.7,.3,1)}
+.map-base.hit .z-img{animation:hit-flash .26s steps(2) 5;filter:drop-shadow(0 0 1cqi #ff2d2d) brightness(1.2) saturate(1.5)}
+.map-base.hit .base-pad{box-shadow:0 0 0 3px #ff4d4f,0 0 22px #ff4d4f}
+.map-base.guard .z-actor{animation:guard 1.1s ease-out}
+.map-base.down .z-idle{animation-play-state:paused}
+.map-base.down .z-actor{transform:translateY(5%) rotate(-9deg) scale(1,.95);transition:transform .6s}
+.map-base.down .z-img{filter:grayscale(.85) brightness(.82) contrast(.9) drop-shadow(0 0 .6cqi #ff4d4f)}
+.map-base.down .base-pad{background:radial-gradient(ellipse at center,#ff4d4f88 0,transparent 70%);box-shadow:0 0 0 2px #ff4d4fdd,0 0 14px #ff4d4f}
+.base-smoke{position:absolute;left:50%;top:18%;width:0;height:0;display:none;z-index:4}
+.map-base.down .base-smoke{display:block}
+.base-smoke i{position:absolute;left:-1.2cqi;top:0;width:2.4cqi;height:2.4cqi;border-radius:50%;background:radial-gradient(circle,#3d4147dd,#3d414700 70%);animation:smoke 2.4s ease-out infinite}
+.base-smoke i:nth-child(2){animation-delay:.8s;left:-.3cqi}
+.base-smoke i:nth-child(3){animation-delay:1.6s;left:-2cqi}
+.z-confetti{position:absolute;left:50%;top:38%;width:0;height:0;z-index:6;pointer-events:none}
+.z-confetti i{position:absolute;left:0;top:0;width:.75cqi;height:1.15cqi;border-radius:1px;background:var(--c);box-shadow:0 0 4px #0006;animation:confetti 1.7s cubic-bezier(.2,.6,.4,1) both}
+
+/* Khiên: SLA (giữ dịch vụ) và chặn đòn */
+.base-shield{position:absolute;left:50%;top:55%;width:235%;height:235%;transform:translate(-50%,-50%) scale(.45);opacity:0;transition:opacity .3s,transform .45s cubic-bezier(.3,1.6,.5,1);pointer-events:none;overflow:visible;z-index:4;filter:drop-shadow(0 0 .45cqi #7dffe0) drop-shadow(0 0 1.2cqi #2ee6c3aa)}
+.sh-bubble{fill:url(#sh-grad)}
+.sh-rim{fill:none;stroke:#c9fff3;stroke-width:4.5}
+.sh-hex{fill:none;stroke:#effffb;stroke-width:3;stroke-dasharray:12 6;stroke-linejoin:round}
+.sh-ring{fill:none;stroke:#7dffe0;stroke-width:2.5;stroke-dasharray:3 6}
+.sh-spin{transform-box:view-box;transform-origin:0 0;animation:spin 7s linear infinite}
+.sh-spin2{transform-box:view-box;transform-origin:0 0;animation:spin 5s linear infinite reverse}
+.sh-badge{color:#7dffe0}
+.map-base.shielded .base-shield,.map-base.blocked .base-shield{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.map-base.shielded .sh-rim{animation:shield-pulse 1.1s ease-in-out infinite}
+.map-base.blocked .sh-rim{stroke:#fff;animation:shield-flash .4s ease-out 3}
+.map-base.blocked .sh-bubble{animation:bubble-flash .4s ease-out 3}
+.map-base.down.shielded:not(.blocked) .base-shield{opacity:0}
+
+/* Số điểm nổi: viên thuốc đậm, viền phát sáng */
+.base-floats{position:absolute;left:50%;top:-4%;width:0;height:0;pointer-events:none;z-index:7}
+.score-float{position:absolute;left:0;top:0;transform:translate(-50%,0);white-space:nowrap;padding:.12em .55em .16em;border-radius:999px;background:#03101ae8;border:2px solid currentColor;box-shadow:0 0 14px currentColor,0 3px 0 #000b;font:900 clamp(12px,2.1cqi,30px)/1.1 'Arial Black',Arial,sans-serif;letter-spacing:.5px;text-shadow:0 0 8px currentColor;animation:float-up 3.2s cubic-bezier(.2,.9,.3,1) forwards}
+.score-float.pos{color:#5dff9e}.score-float.neg{color:#ff5d5f}.score-float.info{color:#bffff0}
+.score-float small{font-size:.58em;margin-left:5px;letter-spacing:1px;text-shadow:none}
+
+/* ---------- Đạn ---------- */
+.fx-svg{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;overflow:visible}
 .fx-layer{pointer-events:none}
-.fx-trail{fill:none;stroke-width:4;stroke-linecap:round}
-.fx-trail.hit{stroke:#ff9f1c}
-.fx-trail.blocked{stroke:#e0faff;stroke-dasharray:3 10}
-.fx-shell{filter:url(#fx-glow)}
-.fx-shell.hit{fill:#fff6cf;stroke:#ff6a00;stroke-width:3.5}
-.fx-shell.blocked{fill:#ffffff;stroke:#38bdf8;stroke-width:3.5}
-.fx-burst{fill:none;stroke-width:5;transform-box:fill-box;transform-origin:center;animation:burst .8s ease-out forwards}
-.fx-burst.hit{stroke:#ff5a1f}
-.fx-burst.blocked{stroke:#e6fffa}
-.fx-spark{stroke-width:3.5;stroke-linecap:round;animation:spark .7s ease-out forwards}
+.fx-glow-trail{fill:none;stroke-width:20;stroke-linecap:round;opacity:.32}
+.fx-glow-trail.hit{stroke:#ff9f1c}.fx-glow-trail.blocked{stroke:#7fe6ff}
+.fx-trail{fill:none;stroke-width:6.5;stroke-linecap:round}
+.fx-trail.hit{stroke:#ffb347}.fx-trail.blocked{stroke:#e8fbff}
+.fx-shell{--shell:#ff8a1f}
+.fx-shell.blocked{--shell:#38bdf8}
+.fx-shell-halo{fill:var(--shell);opacity:.55;filter:url(#fx-glow)}
+.fx-shell-core{fill:#fff;stroke:var(--shell);stroke-width:4.5}
+.fx-ember{fill:#ffb347;opacity:.85;transform-box:fill-box;transform-origin:center;animation:ember .5s ease-out forwards}
+.fx-ember.blocked{fill:#bff4ff}
+.fx-flash{transform-box:fill-box;transform-origin:center;animation:flash .5s ease-out forwards}
+.fx-flash.hit{fill:#fff3c4}.fx-flash.blocked{fill:#e6fffa}
+.fx-ring{fill:none;transform-box:fill-box;transform-origin:center;animation:ring .85s ease-out forwards}
+.fx-ring.hit{stroke:#ff5a1f}.fx-ring.blocked{stroke:#e6fffa}
+.fx-spark{stroke-width:4.5;stroke-linecap:round;animation:spark .85s ease-out forwards}
 .fx-spark.hit{stroke:#ffd166}.fx-spark.blocked{stroke:#bff4ff}
-.fx-muzzle{fill:#fff3c4;transform-box:fill-box;transform-origin:center;animation:burst .45s ease-out forwards}
+.fx-muzzle{fill:#fff3c4;transform-box:fill-box;transform-origin:center;animation:flash .4s ease-out forwards}
 
 /* ---------- Cột phải ---------- */
 .war-side{display:flex;flex-direction:column;gap:18px;min-width:0}
@@ -184,8 +208,8 @@ body:has(.war){background:#04101a}
 .lg-down{background:var(--red);border-radius:3px;box-shadow:0 0 6px var(--red)}
 .lg-block{border:2px dashed #bffff0;background:radial-gradient(circle,#e8fbff 25%,transparent 30%)}
 .war-roster ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.war-roster li{--team:#38bdf8;display:flex;align-items:center;gap:8px;padding:6px;border:1px solid color-mix(in srgb,var(--team) 45%,transparent);background:color-mix(in srgb,var(--team) 8%,transparent);min-width:0}
-.war-roster .roster-beast{width:46px;height:40px;flex-shrink:0}
+.war-roster li{--team:#38bdf8;display:flex;align-items:center;gap:8px;padding:6px;border:1px solid color-mix(in srgb,var(--team) 50%,transparent);background:color-mix(in srgb,var(--team) 9%,transparent);min-width:0}
+.war-roster img{width:44px;height:44px;flex-shrink:0;filter:drop-shadow(0 2px 2px #0008)}
 .war-roster b{display:block;font:700 12px monospace;color:var(--team)}
 .war-roster span{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -201,6 +225,7 @@ body:has(.war){background:#04101a}
 details summary{cursor:pointer;color:#d1d6bd;padding:10px 0;font-size:13px}
 #world-service-details{max-height:240px;overflow:auto}
 #world-services{color:var(--muted);font:11px monospace;overflow-wrap:anywhere}
+.credits{text-align:right;margin-top:18px}
 
 /* ---------- Nộp flag ---------- */
 .world-submit{margin-top:22px;border:1px solid var(--line);background:var(--panel);padding:4px 18px 16px}
@@ -216,65 +241,62 @@ details summary{cursor:pointer;color:#d1d6bd;padding:10px 0;font-size:13px}
 .world-submit :focus-visible{outline:3px solid #e8bd72;outline-offset:3px}
 
 /* ---------- Keyframes ---------- */
-@keyframes waves{to{transform:translate(64px,36px)}}
+@keyframes waves{to{transform:translate(6cqi,3.4cqi)}}
 @keyframes twinkle{0%,100%{opacity:0;transform:scale(.3)}45%{opacity:1;transform:scale(1)}60%{opacity:.6;transform:scale(.7) rotate(45deg)}}
-@keyframes foam{50%{opacity:.45}}
 @keyframes ray{from{opacity:.55;translate:0 0}to{opacity:1;translate:0 1.2cqi}}
-@keyframes drift{from{left:-30%}to{left:110%}}
+@keyframes drift{from{transform:translateX(-30cqi)}to{transform:translateX(110cqi)}}
 @keyframes sweep{to{transform:rotate(-360deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{50%{opacity:.35}}
 @keyframes blink{50%{opacity:.45}}
-@keyframes bob{50%{transform:translate(-50%,-4px)}}
-@keyframes pad{50%{opacity:.6}}
-@keyframes glow{50%{opacity:.55}}
-@keyframes idle{50%{transform:translateY(-1.5px)}}
-@keyframes hover-bob{50%{transform:translateY(-5px)}}
-@keyframes flap-l{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
-@keyframes flap-r{0%,100%{transform:rotate(0)}50%{transform:rotate(24deg)}}
-@keyframes look{0%,40%,100%{transform:rotate(0)}50%,80%{transform:rotate(-7deg)}}
-@keyframes trunk{0%,100%{transform:rotate(0)}30%{transform:rotate(-14deg)}65%{transform:rotate(6deg)}}
-@keyframes ear{0%,100%{transform:rotate(0)}50%{transform:rotate(-10deg)}}
-@keyframes breathe{50%{transform:scale(1.025,1.04)}}
-@keyframes nod{0%,100%{transform:rotate(0)}25%{transform:rotate(5deg)}60%{transform:rotate(-3deg)}}
-@keyframes jaw{0%,55%,100%{transform:rotate(0)}65%,82%{transform:rotate(20deg)}}
-@keyframes roar-head{0%,55%,100%{transform:rotate(0)}65%,82%{transform:rotate(-6deg)}}
-@keyframes tail{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)}}
-@keyframes roar{40%{transform:scale(1.18) translateY(-6%)}}
-@keyframes smoke{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translate(.8cqi,-4cqi) scale(2.2)}}
+@keyframes bob{50%{transform:translate(-50%,-5px)}}
+@keyframes pad{50%{opacity:.62}}
 @keyframes territory-alert{50%{stroke-opacity:.35}}
-@keyframes shield-pulse{50%{fill:#7dffe033;stroke-width:4}}
-@keyframes shield-flash{0%{stroke-width:9;fill:#ffffff88}100%{stroke-width:4}}
-@keyframes shake{20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
-@keyframes float-up{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}12%{opacity:1;transform:translate(-50%,-6px) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60px)}}
-@keyframes burst{0%{opacity:1;transform:scale(.2)}100%{opacity:0;transform:scale(2.4)}}
-@keyframes spark{0%{opacity:1}100%{opacity:0;stroke-dashoffset:-30}}
+/* cử động thường */
+@keyframes idle-breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,1.025)}}
+@keyframes idle-hop{0%,52%,100%{transform:translateY(0) scale(1,1)}14%,38%{transform:scale(1.015,.985)}26%{transform:scale(.99,1.015)}58%{transform:translateY(0) scale(1.12,.86)}66%{transform:translateY(-18%) scale(.93,1.09)}73%{transform:translateY(-22%) scale(.98,1.02)}81%{transform:translateY(0) scale(1.1,.88)}88%{transform:translateY(-4%) scale(.98,1.03)}94%{transform:translateY(0) scale(1.02,.98)}}
+@keyframes shadow-hop{0%,58%,94%,100%{transform:scale(1);opacity:1}70%{transform:scale(.62);opacity:.55}81%{transform:scale(1.08);opacity:1}}
+@keyframes idle-stomp{0%,100%{transform:rotate(0) translateX(0) scale(1,1)}25%{transform:rotate(-1.8deg) translateX(-1.6%) scale(1.012,.99)}50%{transform:rotate(0) translateX(0) scale(1,1.025)}75%{transform:rotate(1.8deg) translateX(1.6%) scale(1.012,.99)}}
+@keyframes idle-prowl{0%,100%{transform:translateX(0) scale(1,1)}30%,52%{transform:translateX(-3.5%) scale(1.03,.95)}42%{transform:translateX(-3.5%) scale(1.035,.94)}72%{transform:translateX(1.2%) scale(.99,1.025)}}
+@keyframes idle-stretch{0%,38%,100%{transform:scale(1,1)}19%{transform:scale(1.012,1.02)}50%,62%{transform:translateX(-2%) scale(1.13,.85)}72%{transform:scale(.97,1.05)}82%{transform:scale(1.01,.99)}}
+@keyframes idle-float{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(-10%) rotate(3deg)}}
+@keyframes shadow-float{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(.7);opacity:.5}}
+@keyframes idle-slither{0%,100%{transform:skewX(0) scale(1,1)}25%{transform:skewX(-7deg) scale(1.04,.97)}50%{transform:skewX(0) scale(.98,1.03)}75%{transform:skewX(7deg) scale(1.04,.97)}}
+@keyframes idle-prance{0%,58%,100%{transform:rotate(0) translateY(0)}68%{transform:rotate(10deg) translateY(-3%)}76%{transform:rotate(8deg) translateY(-6%)}86%{transform:rotate(0) translateY(0) scale(1.05,.95)}92%{transform:scale(.99,1.02)}}
+@keyframes idle-graze{0%,42%,100%{transform:rotate(0) translateY(0)}52%,58%{transform:rotate(-6deg) translateY(2%)}64%{transform:rotate(-4.5deg) translateY(1.5%)}70%,76%{transform:rotate(-6deg) translateY(2%)}86%{transform:rotate(0) translateY(0)}}
+@keyframes idle-peck{0%,48%,100%{transform:rotate(0)}54%{transform:rotate(-15deg)}58%{transform:rotate(-2deg)}64%{transform:rotate(-15deg)}68%{transform:rotate(0)}80%{transform:scale(1.02,.98)}}
+@keyframes idle-wag{0%,100%{transform:translateY(0) rotate(0)}8%{transform:rotate(-2.5deg)}16%{transform:rotate(2.5deg)}24%{transform:rotate(-2.5deg)}32%{transform:rotate(2deg)}40%{transform:rotate(0)}58%{transform:translateY(-7%) scale(.96,1.05)}66%{transform:translateY(0) scale(1.06,.94)}74%{transform:scale(.99,1.01)}}
+/* sự kiện */
+@keyframes windup{to{transform:translateX(calc(var(--dir) * -7%)) scale(1.1,.86)}}
+@keyframes lunge{0%{transform:translateX(calc(var(--dir) * -7%)) scale(1.1,.86)}28%{transform:translateX(calc(var(--dir) * 20%)) scale(.9,1.1)}55%{transform:translateX(calc(var(--dir) * 6%)) scale(1.04,.97)}100%{transform:none}}
+@keyframes celebrate{0%{transform:none}6%{transform:scale(1.14,.84)}17%{transform:translateY(-55%) scale(.9,1.12) rotate(-8deg)}27%{transform:translateY(0) scale(1.16,.84) rotate(0)}34%{transform:translateY(0) scale(1.14,.86) rotate(0)}50%{transform:translateY(-82%) scale(.96,1.05) rotate(-180deg)}63%{transform:translateY(0) scale(1.16,.84) rotate(-360deg)}75%{transform:translateY(-28%) scale(.96,1.05) rotate(-360deg)}85%{transform:translateY(0) scale(1.08,.92) rotate(-360deg)}93%{transform:scale(.98,1.02) rotate(-360deg)}100%{transform:rotate(-360deg)}}
+@keyframes shadow-celebrate{0%,6%,27%,34%,63%,85%,100%{transform:scale(1);opacity:1}17%{transform:scale(.55);opacity:.45}50%{transform:scale(.4);opacity:.3}75%{transform:scale(.75);opacity:.7}}
+@keyframes knockback{0%{transform:none}14%{transform:translateX(calc(var(--kb) * 15%)) rotate(calc(var(--kb) * 18deg)) scale(1.06,.9)}42%{transform:translateX(calc(var(--kb) * 8%)) rotate(calc(var(--kb) * -7deg))}68%{transform:translateX(calc(var(--kb) * 2%)) rotate(calc(var(--kb) * 3deg))}100%{transform:none}}
+@keyframes hit-flash{50%{filter:drop-shadow(0 0 1.2cqi #ff2d2d) brightness(2) saturate(0) sepia(1) hue-rotate(-40deg) saturate(6)}}
+@keyframes guard{15%{transform:scale(1.07,.9) translateY(2%)}65%{transform:scale(1.05,.93) translateY(1.5%)}100%{transform:none}}
+@keyframes smoke{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translate(1cqi,-5cqi) scale(2.4)}}
+@keyframes confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}45%{opacity:1;transform:translate(var(--dx),var(--dy)) rotate(calc(var(--rot) / 2))}100%{opacity:0;transform:translate(calc(var(--dx) * 1.25),calc(var(--dy) + 7cqi)) rotate(var(--rot))}}
+@keyframes shield-pulse{50%{stroke-width:7}}
+@keyframes shield-flash{0%{stroke-width:14}100%{stroke-width:4.5}}
+@keyframes bubble-flash{0%{opacity:1;fill-opacity:1}50%{fill-opacity:.4}}
+@keyframes float-up{0%{opacity:0;transform:translate(-50%,30%) scale(.4)}10%{opacity:1;transform:translate(-50%,-40%) scale(1.28)}18%{transform:translate(-50%,-55%) scale(1)}78%{opacity:1;transform:translate(-50%,-190%) scale(1)}100%{opacity:0;transform:translate(-50%,-250%) scale(.92)}}
+@keyframes ember{to{opacity:0;transform:scale(.15)}}
+@keyframes flash{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(3.2)}}
+@keyframes ring{0%{opacity:1;transform:scale(.5);stroke-width:10}100%{opacity:0;transform:scale(4.8);stroke-width:1}}
+@keyframes spark{0%{opacity:1}100%{opacity:0;stroke-dashoffset:-60}}
 @keyframes fresh{from{background:#1d3f52}to{background:transparent}}
 
 /* ---------- Responsive ---------- */
-@media(max-width:1200px){.world-layout{grid-template-columns:1fr}.war-side{display:grid;grid-template-columns:1fr 1fr;align-items:start}.war-roster{grid-column:1/-1}.war-roster ul{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
-@media(max-width:900px){.war-hud{grid-template-columns:1fr auto}.war-stats{grid-column:1/-1;justify-content:space-between}.war-side{grid-template-columns:1fr}.world-bottom{grid-template-columns:1fr}}
-@media(max-width:600px){
- .arena.war{padding:12px}
- .war-hud{grid-template-columns:1fr;gap:10px}
- .war-clock{justify-content:space-between;padding:8px 12px}
- .war-clock-label{font-size:11px;letter-spacing:1px}
- .war-clock [data-timer]{font-size:22px}
- .war-stats{gap:8px}.war-stats dd{font-size:15px}.war-stats dt{font-size:8px;letter-spacing:1px}
- .war-ribbon{font-size:10px;padding:6px 10px}.war-ribbon-note{display:none}
- .map-stage{--emb:10cqi}.map-stage.dense{--emb:7cqi}
- .base-plate{padding:0 3px;column-gap:3px}
- .base-plate span{display:none}
- .base-badge{padding:0 3px;letter-spacing:0}
- .dense .base-badge{font-size:0;padding:3px;border-radius:50%;margin-top:2px}
- .map-ticks,.map-scale,.map-label .map-label--lake{display:none}
- .map-caption{font-size:8px}
- .war th,.war td{padding:10px 3px;font-size:11px}.war th{font-size:8px;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}.war td:nth-child(3){font-size:16px}
- .war-roster ul{grid-template-columns:1fr}
- .submit-fx{grid-template-columns:1fr}
-}
+@media(max-width:1200px){.world-layout{grid-template-columns:1fr}.war-side{display:grid;grid-template-columns:1fr 1fr;align-items:start}.world-ranking{grid-column:1/-1}.war-roster ul{grid-template-columns:1fr}}
+@media(max-width:900px){.war-hud{grid-template-columns:1fr auto}.war-stats{grid-column:1/-1;justify-content:space-between}.war-side{grid-template-columns:1fr}.world-bottom{grid-template-columns:1fr}.war-roster ul{grid-template-columns:1fr 1fr}}
+/* Bản đồ dành cho màn hình desktop/máy chiếu; không duy trì bố cục điện thoại. */
+.arena.war{min-width:1080px}
 
-/* Tắt hiệu ứng động: mặc định theo prefers-reduced-motion, người xem có thể bật lại (world.js). */
-.war.calm .map-stage *,.war.calm .war-dot,.war.calm .war-clock [data-timer].urgent,.war.calm .world-entry.fresh,.war.calm .war-roster *{animation:none!important}
+
+/* Tắt hiệu ứng động (mặc định theo prefers-reduced-motion; người xem bật lại được) và tạm dừng khi ẩn tab. */
+.war.calm .map-stage *,.war.calm .war-dot,.war.calm .war-clock [data-timer].urgent,.war.calm .world-entry.fresh{animation:none!important}
 .war.calm .spark{opacity:.7}
-.war.calm .score-float{transform:translate(-50%,-30px)}
-.war.calm .cloud.c1{left:8%}.war.calm .cloud.c2{left:55%}.war.calm .cloud.c3{left:30%}
+.war.calm .score-float{transform:translate(-50%,-120%)}
+.war.calm .cloud.c1{transform:translateX(8cqi)}.war.calm .cloud.c2{transform:translateX(55cqi)}.war.calm .cloud.c3{transform:translateX(30cqi)}
+.war.tab-hidden .map-stage *{animation-play-state:paused!important}
+.submit-as{margin:6px 0 4px;font-size:13px;color:#cfe0e7}.submit-as b{color:var(--gold)}.submit-as a{color:var(--gold)}

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nộp flag — Round 1</title>
+<style>body{background:#101b23;color:#e8f1f4;font:16px system-ui;max-width:1000px;margin:32px auto;padding:0 16px}input,textarea,button{font:inherit;padding:8px}textarea{width:95%;height:110px}pre{white-space:pre-wrap;background:#1c303b;padding:12px}a{color:#6ef0be}input,textarea{background:#172a35;color:#fff;border:1px solid #527180;max-width:100%;box-sizing:border-box}button{background:#6ef0be;color:#101b23;border:0;cursor:pointer}:focus-visible{outline:3px solid #ffb46d;outline-offset:3px}#targets{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #39505f;padding:8px;text-align:left}</style>
+<link rel="stylesheet" href="/arena.css"><a href="/">Scoreboard</a><h1>Nộp flag</h1>
+<p>Dùng token của đội do quản trị cung cấp. Mỗi flag một dòng; tối đa 100 flag mỗi lần.</p>
+<form id="submission"><label>Team token <input id="token" type="password" autocomplete="off" required></label><p><textarea id="flags" required placeholder="Flag lấy được từ đội khác"></textarea></p><button>Nộp flag</button></form>
+<pre id="result" aria-live="polite"></pre>
+<h2>Vị trí mục tiêu còn hiệu lực</h2><p>Đây là ID/đường dẫn mục tiêu; người chơi cần khai thác để lấy giá trị flag.</p><div id="targets"></div>
+<script>
+const form=document.querySelector('#submission'),result=document.querySelector('#result');
+form.addEventListener('submit',async event=>{event.preventDefault();const flags=document.querySelector('#flags').value.split(/\s+/).filter(Boolean);if(flags.length>100){result.textContent='Tối đa 100 flag.';return;}try{const response=await fetch('/flags/',{method:'PUT',headers:{'Content-Type':'application/json','X-Team-Token':document.querySelector('#token').value.trim()},body:JSON.stringify(flags)});result.textContent=JSON.stringify(await response.json(),null,2);}catch(e){result.textContent='Không kết nối được bộ nhận flag.';}});
+async function targets(){try{const response=await fetch('/api/client/attack_data/',{cache:'no-store',signal:AbortSignal.timeout(7000)});const data=await response.json();const container=document.querySelector('#targets');container.replaceChildren();if(!data){container.textContent='Chưa có flag.';return;}const table=document.createElement('table');const header=table.insertRow();for(const text of ['Task','Đội / IP','Vị trí']){const cell=document.createElement('th');cell.textContent=text;header.append(cell);}for(const [task,teams] of Object.entries(data)){for(const [ip,locations] of Object.entries(teams)){for(const location of locations){const row=table.insertRow();for(const text of [task,ip,location]) row.insertCell().textContent=text;}}}container.append(table);}catch(e){document.querySelector('#targets').textContent='Không tải được mục tiêu.';}}
+async function pollTargets(){await targets();setTimeout(pollTargets,5000)}pollTargets();
+</script></html>

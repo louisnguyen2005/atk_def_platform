@@ -29,7 +29,7 @@ Upload ở bản này là lỗi xử lý ZIP/symlink dẫn tới đọc file tro
 5. **Dừng** khóa nộp flag và tạm dừng đồng hồ. Tác vụ SSH đã gửi có thể hoàn tất, nhưng không tự chuyển sang tick mới. Bấm Bắt đầu để tiếp tục.
 6. Sau 15 tick và 240 giây nhận flag, hệ thống dừng. Nút reset health bị khóa đối với cuộc thi đã bật chế độ flag.
 
-Dashboard hiển thị cột Attack, Defense, SLA / 15 và Tổng điểm. Trang `/submit.html` cho phép nộp flag bằng team token và xem ID/path mục tiêu. Team token lấy từ phần quản trị đội; không dùng token quản trị web lab để nộp flag.
+Dashboard hiển thị cột Attack, Defense, SLA / 15 và Tổng điểm. Trang `/submit.html` cho phép nộp flag bằng team token và xem ID/path mục tiêu. Team token là token đội do website MekoDataCTF cấp khi đội trưởng tạo đội (đồng bộ sang ForcAD bằng `npm run sync:forcad -- --apply`); người chơi cũng có thể nộp ngay trên trang Scoreboard của website sau khi đăng nhập. Không dùng token quản trị web lab để nộp flag.
 
 ## Thành phần phải chạy
 
@@ -107,7 +107,7 @@ Mở PowerShell trong workspace gốc, nơi có `ForcAD-demo`, `round1-lab` và 
 python round1-lab/recycle.py --archive-id <UUID-tren-dashboard>
 ```
 
-Script yêu cầu đăng nhập admin ForcAD, kiểm tra archive ID, yêu cầu gõ `RECREATE`, rồi cài lại source lab và đặt `patched` về false trên mỗi VM đội. Nó xóa **chỉ** `/var/lib/round1-web` trên bốn VM đội, nên SQLite lab, file flag và upload của cuộc thi cũ bị dọn; không xóa dữ liệu service ở đường dẫn khác. Sau đó checker gọi `/health` từng VM. Chỉ khi cả bốn trả health hợp lệ script mới yêu cầu ForcAD reset `Flags`, `StolenFlags`, kết quả/tick/SLA, log và điểm trong transaction. Snapshot được giữ trong PostgreSQL và JSON backup. Tên/IP đội được giữ, nhưng **ForcAD team token được tạo mới**; sau đó lấy token mới trong phần quản trị đội và cấp cho người chơi. Token quản trị web lab của từng VM không đổi để checker tiếp tục hoạt động. Nếu thiếu token lab hoặc archive không khớp, script từ chối trước khi thay đổi VM. Nếu dashboard hiện `recreating` do mất kết nối trong bước cuối, chạy lại cùng lệnh và cùng archive ID để hoàn tất dọn cache.
+Script yêu cầu đăng nhập admin ForcAD, kiểm tra archive ID, yêu cầu gõ `RECREATE`, rồi cài lại source lab và đặt `patched` về false trên mỗi VM đội. Nó xóa **chỉ** `/var/lib/round1-web` trên bốn VM đội, nên SQLite lab, file flag và upload của cuộc thi cũ bị dọn; không xóa dữ liệu service ở đường dẫn khác. Sau đó checker gọi `/health` từng VM. Chỉ khi cả bốn trả health hợp lệ script mới yêu cầu ForcAD reset `Flags`, `StolenFlags`, kết quả/tick/SLA, log và điểm trong transaction. Snapshot được giữ trong PostgreSQL và JSON backup. Tên/IP đội được giữ, nhưng **ForcAD team token được tạo mới**. Token đội do website MekoDataCTF cấp (người chơi dùng để đăng nhập và nộp flag) không đổi, nên sau khi tái tạo phải đẩy lại token website sang ForcAD: trong `MekoDataCTF_Website` chạy `npm run sync:forcad` để xem kế hoạch, rồi `npm run sync:forcad -- --apply` (xem README website, mục Token đội). Không cần cấp token mới cho người chơi. Token quản trị web lab của từng VM không đổi để checker tiếp tục hoạt động. Nếu thiếu token lab hoặc archive không khớp, script từ chối trước khi thay đổi VM. Nếu dashboard hiện `recreating` do mất kết nối trong bước cuối, chạy lại cùng lệnh và cùng archive ID để hoàn tất dọn cache.
 
 ### 3. Chuẩn bị cuộc thi kế tiếp
 

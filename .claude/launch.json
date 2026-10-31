@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "forcad-token-mock",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\DELL\\AppData\\Local\\Temp\\claude\\D--TAILIEU-LVTN-MEKOSHARING\\dfd9defa-fee6-43ff-9831-64daf0d2c03d\\scratchpad\\forcad-token-mock.js"],
+      "port": 18097
+    },
+    {
+      "name": "website-token",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["MekoDataCTF_Website/app.js"],
+      "port": 3012,
+      "env": {
+        "PORT": "3012",
+        "SESSION_SECRET": "token-login-preview-secret-only-for-local-testing",
+        "FORCAD_URL": "http://127.0.0.1:18097",
+        "DB_FILE": "C:\\Users\\DELL\\AppData\\Local\\Temp\\claude\\D--TAILIEU-LVTN-MEKOSHARING\\dfd9defa-fee6-43ff-9831-64daf0d2c03d\\scratchpad\\token-demo.db"
+      }
+    }
+  ]
+}

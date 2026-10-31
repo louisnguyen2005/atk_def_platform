@@ -1,19 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+        <meta name="viewport" content="width=1280" />
         <!-- <link rel="icon" href="/favicon.ico" /> -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css?family=Merriweather"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
             rel="stylesheet"
         />
         <link
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0/css/all.min.css"
             rel="stylesheet"
         />
-        <title>ForcAD</title>
+        <title>MekoDataCTF · Arena control</title>
+        <!-- Lớp giao diện riêng của bản demo (nằm ở front/public, Vite copy sang dist). -->
+        <link rel="stylesheet" href="/arena.css" />
         <script type="module" src="/src/main.js"></script>
     </head>
     <body>
@@ -24,5 +28,7 @@
             >
         </noscript>
         <div id="app"></div>
+        <script defer src="/round-control.js"></script>
+        <script defer src="/tick-display.js"></script>
     </body>
 </html>

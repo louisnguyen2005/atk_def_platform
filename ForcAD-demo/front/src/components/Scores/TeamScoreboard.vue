@@ -1,53 +1,67 @@
 <template>
-    <div v-if="error !== null">
+    <div v-if="error !== null" class="board-empty">
         {{ error }}
     </div>
-    <div v-else-if="team !== null" class="table">
-        <div class="row">
-            <div class="team">team</div>
-            <div class="score">score</div>
-            <div class="service-name">
-                <div v-for="{ name } in tasks" :key="name" class="service-cell">
-                    {{ name }}
+    <div
+        v-else-if="team !== null"
+        class="board board--history"
+        :style="{ '--service-count': tasks.length }"
+        :class="{ 'board--dense': tasks.length > 4 }"
+    >
+        <div class="board-head">
+            <div class="col-team">Đội</div>
+            <div class="col-score">Điểm</div>
+            <div class="col-services">
+                <div v-for="{ name } in tasks" :key="name" class="svc-head">
+                    <span class="svc-head-name">{{ name }}</span>
                 </div>
             </div>
         </div>
-        <div>
-            <div v-for="(state, index) in states" :key="index" class="row">
-                <div class="team">
-                    <div class="team-name">
-                        {{ team.name }}
-                    </div>
-                    <div class="ip">
-                        {{ team.ip }}
-                    </div>
+
+        <div class="board-body">
+            <div v-for="(state, index) in states" :key="index" class="board-row">
+                <div class="col-team">
+                    <span class="team-name">{{ team.name }}</span>
+                    <span class="team-ip">{{ team.ip }}</span>
                 </div>
-                <div class="score">
-                    {{ state.score.toFixed(2) }}
+                <div class="col-score">
+                    <span class="score-value">{{ money(state.score) }}</span>
                 </div>
-                <div class="service">
+                <div class="col-services">
                     <div
                         v-for="(
                             { sla, score, stolen, lost, message, status }, i
                         ) in state.tasks"
                         :key="i"
-                        class="service-cell"
+                        class="svc-cell"
                         :style="{
-                            fontSize: `${1 - tasks.length / 20}em`,
-                            backgroundColor: getTeamTaskBackground(status),
+                            '--accent': getStatusAccent(status),
+                            backgroundColor: getStatusBackground(status),
                         }"
                     >
-                        <button class="info">
-                            <i class="fas fa-info-circle" />
-                            <span class="tooltip">
-                                {{ message }}
+                        <div class="svc-top">
+                            <span class="status-chip">
+                                {{ statusesNames[status] || 'CHƯA CHẤM' }}
                             </span>
-                        </button>
-                        <div class="fp">
-                            <strong>Điểm UP</strong>: {{ score.toFixed(2) }}
+                            <button v-if="message" class="icon-btn info">
+                                <i class="fas fa-info-circle" />
+                                <span class="tooltip">{{ message }}</span>
+                            </button>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">SLA</span>
+                            <span class="metric-value">
+                                {{ sla.toFixed(2) }}%
+                            </span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Điểm</span>
+                            <span class="metric-value">{{ money(score) }}</span>
                         </div>
                         <div class="flags">
-                            <i class="fas fa-flag" /> +{{ stolen }}/-{{ lost }}
+                            <span class="flag-stolen">+{{ stolen }}</span>
+                            <span class="flag-sep">/</span>
+                            <span class="flag-lost">−{{ lost }}</span>
                         </div>
                     </div>
                 </div>
@@ -57,10 +71,16 @@
 </template>
 
 <script>
-import { getTeamTaskBackground } from '@/utils/colors';
+import { getStatusAccent, getStatusBackground } from '@/utils/colors';
+import { statusesNames } from '@/config';
 import Task from '@/models/task';
 import TeamTask from '@/models/teamTask';
 import '@/assets/table.scss';
+
+const moneyFormat = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
 
 export default {
     data: function () {
@@ -71,7 +91,11 @@ export default {
             tasks: null,
             round: 0,
             by_task: [],
-            getTeamTaskBackground,
+            // Khai báo sẵn để Vue theo dõi được (trước đây chỉ gán trong created).
+            states: [],
+            statusesNames,
+            getStatusAccent,
+            getStatusBackground,
         };
     },
 
@@ -143,126 +167,154 @@ export default {
                     tasks: this.by_task.map((x) => x[i]),
                     score: this.by_task
                         .map((x) => x[i])
-                        .reduce(
-                            (acc, { score }) => acc + score,
-                            0
-                        ),
+                        .reduce((acc, { score }) => acc + score, 0),
                 });
             }
         } catch (e) {
             this.error = "Can't connect to server";
         }
     },
+
+    methods: {
+        money: (value) => moneyFormat.format(Number(value) || 0),
+    },
 };
 </script>
 
 <style lang="scss" scoped>
+/* Lịch sử theo tick: bỏ cột hạng so với bảng xếp hạng chính. */
+.board--history {
+    --grid: minmax(12rem, 1fr) 8rem minmax(0, calc(var(--service-count) * 13rem));
+}
+
+.board--history.board--dense {
+    --grid: minmax(10rem, 1fr) 7rem minmax(0, calc(var(--service-count) * 10rem));
+}
+
+.board-row {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.col-team {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+}
+
 .team-name {
-    font-weight: bold;
+    font-weight: 700;
+    color: var(--text);
 }
 
-.number {
-    flex: 1 1 0;
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
+.team-ip {
+    font-family: var(--mono);
+    font-size: 0.78em;
+    color: var(--text-dim);
 }
 
-.team {
-    flex: 4 1 15%;
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
+.score-value {
+    font-family: var(--mono);
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--accent-teal);
+    font-variant-numeric: tabular-nums;
 }
 
-.score {
-    flex: 2 1 5%;
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
-}
-
-.service {
-    flex: 20 2 0;
-    display: flex;
-    flex-flow: row nowrap;
-
-    border-left: 1px solid #c6cad1;
-
-    & > :not(:last-child) {
-        border-right: 1px solid #c6cad1;
-    }
-}
-
-.service-name {
-    flex: 20 2 0;
-    display: flex;
-    flex-flow: row nowrap;
-    text-align: center;
-}
-
-.service-cell {
-    flex: 1 1 0;
-
+.svc-cell {
     position: relative;
-
     display: flex;
     flex-flow: column nowrap;
-    justify-content: space-around;
+    gap: 3px;
+    padding: 9px 11px 10px;
+    border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-left: 3px solid var(--accent);
 }
 
-.sla {
-    text-align: left;
-    margin-left: 0.5em;
+.svc-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
 }
 
-.fp {
-    text-align: left;
-    margin-left: 0.5em;
+.status-chip {
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.metric {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.82em;
+}
+
+.metric-label {
+    color: var(--text-dim);
+}
+
+.metric-value {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 .flags {
-    text-align: left;
-    margin-left: 0.5em;
+    display: flex;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 0.8em;
 }
 
-.info {
-    padding: 0;
-    position: absolute;
-    top: 0.5em;
-    left: calc(100% - 2.5em - 0.5em);
-    width: 2.5em;
-    height: 2.5em;
+.flag-stolen {
+    color: #6fe3a8;
+    font-weight: 600;
+}
 
-    border-radius: 0.3em;
-    font-size: 0.7em;
-    border: 1px solid #c6cad1;
+.flag-lost {
+    color: #ff8f99;
+    font-weight: 600;
+}
 
-    &:focus {
-        outline: 0;
-        border: 1px solid #c6cad1;
-    }
+.flag-sep {
+    color: var(--text-dim);
 }
 
 .tooltip {
-    font-size: 0.7rem;
-    left: 0;
-    top: 0;
-    transform: translateX(calc(-100%)) translateY(calc(-100% - 0.25em));
     position: absolute;
-    width: 20em;
-    text-align: center;
-    display: block;
-    background-color: black;
-    color: white;
-    border-radius: 0.5em;
-    padding: 1em;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 30;
+    width: 22em;
+    max-width: 60vw;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #05121a;
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: left;
+    overflow-wrap: anywhere;
     opacity: 0;
-    z-index: -1;
+    visibility: hidden;
 }
 
-.info:hover .tooltip {
+.info:hover .tooltip,
+.info:focus-visible .tooltip {
     opacity: 1;
-    z-index: 1;
+    visibility: visible;
 }
 </style>

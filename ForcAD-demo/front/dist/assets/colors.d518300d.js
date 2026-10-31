@@ -1,0 +1,1 @@
+import{t as e,d as n,b as u,c as o}from"./index.6106e346.js";function s(t){return t<e.length?e[t]:n}function a(t){return u[t]||o}function c(t){return a(t).accent}function g(t){return a(t).bg}export{g as a,s as b,c as g};

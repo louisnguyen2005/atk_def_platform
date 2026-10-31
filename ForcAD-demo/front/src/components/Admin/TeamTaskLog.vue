@@ -1,62 +1,71 @@
 <template>
     <error-box :error="error">
         <div>
-            <p>
-                Team
-                <b>{{ teamName }}</b>
-                ({{ teamId }}) task
-                <b>{{ taskName }}</b>
-                ({{ taskId }}) history
-            </p>
-            <div class="table">
-                <div class="row">
-                    <div class="round">round</div>
-                    <div class="status">status</div>
-                    <div class="score">score</div>
-                    <div class="flags">flags</div>
-                    <div class="checks">checks</div>
-                    <div class="public">public</div>
-                    <div class="private">private</div>
-                    <div class="command">command</div>
-                </div>
-                <div
-                    v-for="tt in teamtasks"
-                    :key="tt.id"
-                    class="row content-row"
-                    :style="{
-                        backgroundColor: getTeamTaskBackground(tt.status),
-                    }"
-                >
-                    <div class="round">
-                        {{ tt.round }}
-                    </div>
-                    <div class="status">
-                        {{ tt.status }}
-                    </div>
-                    <div class="score">
-                        {{ tt.score }}
-                    </div>
-                    <div class="flags">+{{ tt.stolen }}/-{{ tt.lost }}</div>
-                    <div class="checks">
-                        {{ tt.checks_passed }}/{{ tt.checks }}
-                    </div>
-                    <div class="public">
-                        {{ tt.public_message }}
-                    </div>
-                    <div class="private">
-                        {{ tt.private_message }}
-                    </div>
-                    <div class="command">
-                        {{ tt.command }}
-                    </div>
-                </div>
+            <div class="log-head">
+                <p class="log-kicker">Lịch sử checker</p>
+                <h1 class="log-title">
+                    {{ teamName }}
+                    <span class="log-sep">·</span>
+                    {{ taskName }}
+                </h1>
+                <p class="log-sub">
+                    team #{{ teamId }} · task #{{ taskId }}
+                </p>
+            </div>
+
+            <div class="log-wrap">
+                <table class="log">
+                    <thead>
+                        <tr>
+                            <th class="c-num">Tick</th>
+                            <th>Trạng thái</th>
+                            <th class="c-num">Điểm</th>
+                            <th class="c-num">Flag</th>
+                            <th class="c-num">Checks</th>
+                            <th>Thông báo công khai</th>
+                            <th>Thông báo nội bộ</th>
+                            <th>Lệnh</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="tt in teamtasks" :key="tt.id">
+                            <td class="c-num mono">{{ tt.round }}</td>
+                            <td>
+                                <span
+                                    class="status-chip"
+                                    :style="{
+                                        '--accent': getStatusAccent(tt.status),
+                                        backgroundColor: getStatusBackground(
+                                            tt.status
+                                        ),
+                                    }"
+                                >
+                                    {{ statusesNames[tt.status] || tt.status }}
+                                </span>
+                            </td>
+                            <td class="c-num mono">{{ tt.score }}</td>
+                            <td class="c-num mono flags">
+                                <span class="flag-stolen">+{{ tt.stolen }}</span>
+                                <span class="flag-sep">/</span>
+                                <span class="flag-lost">−{{ tt.lost }}</span>
+                            </td>
+                            <td class="c-num mono">
+                                {{ tt.checks_passed }}/{{ tt.checks }}
+                            </td>
+                            <td class="c-msg">{{ tt.public_message }}</td>
+                            <td class="c-msg">{{ tt.private_message }}</td>
+                            <td class="c-msg mono">{{ tt.command }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </error-box>
 </template>
 
 <script>
-import { getTeamTaskBackground } from '@/utils/colors';
+import { getStatusAccent, getStatusBackground } from '@/utils/colors';
+import { statusesNames } from '@/config';
 import ErrorBox from '@/components/Lib/ErrorBox.vue';
 import '@/assets/table.scss';
 
@@ -74,7 +83,9 @@ export default {
             teamName: null,
             taskName: null,
 
-            getTeamTaskBackground,
+            statusesNames,
+            getStatusAccent,
+            getStatusBackground,
         };
     },
 
@@ -111,49 +122,125 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.content-row {
-    & > :not(:first-child) {
-        border-left: 1px solid #c6cad1;
-    }
-}
-.round {
-    flex: 1 1 0;
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
+.log-head {
+    margin-bottom: 18px;
 }
 
-.status {
-    @extend .round;
+.log-kicker {
+    margin: 0 0 2px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-teal);
 }
 
-.score {
-    @extend .round;
+.log-title {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.log-sep {
+    color: var(--text-dim);
+    margin: 0 4px;
+}
+
+.log-sub {
+    margin: 2px 0 0;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.log-wrap {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    overflow: auto;
+    max-height: 72vh;
+}
+
+.log {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.log thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 11px 14px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line-strong);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.log tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+
+.log tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.log tbody tr:hover {
+    background: var(--panel-hi);
+}
+
+.c-num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.mono {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.c-msg {
+    max-width: 22rem;
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+}
+
+.status-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
 }
 
 .flags {
-    @extend .round;
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
 }
 
-.score {
-    @extend .round;
+.flag-stolen {
+    color: #6fe3a8;
 }
 
-.checks {
-    @extend .round;
+.flag-lost {
+    color: #ff8f99;
 }
 
-.public {
-    @extend .round;
-    flex: 1.5 2 15%;
-    overflow-x: auto;
-}
-
-.private {
-    @extend .public;
-}
-
-.command {
-    @extend .public;
+.flag-sep {
+    color: var(--text-dim);
 }
 </style>
