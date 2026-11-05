@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>MekoDataCTF · Crypto Range</title>
+  <meta name="description" content="MekoDataCTF attack and defense crypto challenge scoreboard">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Orbitron:wght@500;700;800;900&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/crypto/assets/dashboard.css">
+  <link rel="preload" as="image" href="/crypto/assets/space-bg.webp">
+  <script type="module" src="/crypto/assets/arena3d/main.js?v=3"></script>
+  <script src="/crypto/assets/dashboard.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="MekoDataCTF Crypto Range home"><span class="brand-mark">M<span>+</span></span><span class="brand-name">MEKO<span>DATA</span><small>CYBER RANGE</small></span></a>
+    <div class="event-label"><span class="live-dot"></span><span>ATTACK / DEFENSE</span><i></i><span>CRYPTO DIVISION</span></div>
+    <a class="top-link" href="https://10.32.8.223/home" target="_blank" rel="noreferrer">CYBERRANGE <span>↗</span></a>
+  </header>
+  <main class="warzone">
+    <section class="arena" id="arena" aria-label="Sân đấu tấn công và phòng thủ">
+      <canvas id="arena-canvas" aria-hidden="true"></canvas>
+      <div class="arena-hud">
+        <div class="hud-round"><span class="live-dot"></span><b id="phase-label">READY</b><small id="tick-label">—</small><b class="hud-timer" id="timer">--:--</b></div>
+        <div class="hud-plates" id="hud-plates"></div>
+        <div class="hud-feed" id="hud-feed" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="score-section">
+      <div class="section-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> LIVE STANDINGS</div><h2>Điểm tấn công & phòng thủ</h2></div><div class="live-status"><span class="live-dot" id="connection-dot"></span><span id="connection-label">Đang kết nối scoreboard</span><span class="updated" id="updated">—</span></div></div>
+      <div class="table-wrap"><table class="score-table"><thead><tr><th>#</th><th>ĐỘI</th><th>TỔNG ĐIỂM</th><th>ATTACK <small>CAPTURED</small></th><th>DEFENSE <small>HELD − LOST</small></th><th>SLA <small>HEALTH</small></th></tr></thead><tbody id="rankings"><tr><td colspan="6" class="loading">Đang tải dữ liệu cuộc thi…</td></tr></tbody></table></div>
+      <div class="score-legend"><span><i class="legend-a"></i> +1 cướp flag</span><span><i class="legend-d"></i> +1 mỗi flag giữ được · −1 mỗi flag bị cướp</span><span><i class="legend-s"></i> +1 SLA mỗi vòng UP đủ 3 service</span><span class="score-equation">TỔNG = ATTACK + DEFENSE + SLA</span></div>
+    </section>
+
+    <section class="challenge-section">
+      <div class="section-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> ATTACK SURFACE</div><h2>Ba bài crypto</h2></div><p class="section-note">Mỗi VM có cả 3 cổng. Nối bằng <code>ncat HOST PORT</code> hoặc thử trong terminal của range.</p></div>
+      <div class="challenge-grid" id="challenge-grid">
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">01</span><span class="tag tag-violet">ELLIPTIC CURVE</span></div><h3>Curveball</h3><div class="cve">CVE-2020-0601 <span>ECDSA · P-256</span></div><p>Verifier tin generator do người gửi chọn. Dùng chính khóa công khai CA làm G và ký giả certificate.</p><div class="target-box" data-target="curveball"></div><div class="challenge-foot"><span class="vuln-dot"></span> GENERATOR BỊ BỎ QUA</div></article>
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">02</span><span class="tag tag-amber">BLOCK CIPHER</span></div><h3>Padding Oracle</h3><div class="cve">CVE-2016-2107 <span>AES-CBC · PKCS#7</span></div><p>Padding và nội dung sai trả hai lỗi khác nhau. Khôi phục từng byte plaintext từ ciphertext.</p><div class="target-box" data-target="padding_oracle"></div><div class="challenge-foot"><span class="vuln-dot"></span> HAI LỖI PHẢN HỒI</div></article>
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">03</span><span class="tag tag-cyan">DIGITAL SIGNATURE</span></div><h3>ECDSA Nonce</h3><div class="cve">CWE-323 <span>ECDSA · RFC 6979</span></div><p>Hai chữ ký để lộ nonce bị dùng lại. Tìm khóa riêng rồi ký lệnh mở flag.</p><div class="target-box" data-target="ecdsa_nonce"></div><div class="challenge-foot"><span class="vuln-dot"></span> NONCE K BỊ TÁI SỬ DỤNG</div></article>
+      </div>
+    </section>
+
+    <section class="lower-grid">
+      <article class="panel team-panel">
+        <div class="panel-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> PLAYER CONSOLE</div><h2>Nộp flag</h2></div><span class="panel-badge">TEAM ACCESS</span></div>
+        <p class="panel-copy">Đăng nhập website đội để tự nhận token. Bản demo có sẵn token mẫu cho từng đội.</p>
+        <form id="submit-form">
+          <label for="team-select">Đội thi</label><select id="team-select"><option value="">Chọn đội</option></select>
+          <label for="team-token">Team token</label><div class="input-with-action"><input id="team-token" type="password" autocomplete="off" placeholder="Nhập token đội của bạn"><button type="button" id="show-token" aria-label="Hiện token">HIỆN</button></div>
+          <label for="flag-input">Flag <span>có thể dán nhiều dòng</span></label><textarea id="flag-input" rows="3" placeholder="MekoDataCTF{…}" spellcheck="false"></textarea>
+          <div class="form-foot"><button class="button button-primary" type="submit">GỬI FLAG <span>↗</span></button><span class="form-result" id="submit-result" aria-live="polite"></span></div>
+        </form>
+      </article>
+      <article class="panel operations-panel">
+        <div class="panel-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> DEFENSE MONITOR</div><h2>Trạng thái VM</h2></div><span class="panel-badge"><span class="live-dot"></span> LAST CHECK</span></div>
+        <div class="health-table"><div class="health-head"><span>ĐỘI</span><span>CURVEBALL</span><span>PADDING</span><span>ECDSA</span></div><div id="health-rows"><div class="health-empty">Bắt đầu round để chạy kiểm tra service.</div></div></div>
+        <div class="capture-head"><span>GẦN ĐÂY BỊ CƯỚP FLAG</span><span class="capture-live">LIVE</span></div><div id="capture-feed" class="capture-feed"><div class="feed-empty">Chưa có flag bị cướp.</div></div>
+      </article>
+    </section>
+
+    <details class="admin-panel" id="admin-panel"><summary><span class="eyebrow"><span class="eyebrow-line"></span> ORGANIZER</span><span>Điều khiển cuộc thi <b>＋</b></span></summary>
+      <div class="admin-body"><div class="admin-login"><label for="admin-token">Admin key</label><input id="admin-token" type="password" autocomplete="off" placeholder="Key nằm trong crypto-lab/.secrets/admin.token"><button class="button button-quiet" id="admin-login" type="button">MỞ QUYỀN BTC</button><span id="admin-status" aria-live="polite"></span></div>
+        <div class="admin-actions" id="admin-actions" hidden><button class="button button-primary" data-action="start">▶ BẮT ĐẦU / TIẾP TỤC</button><button class="button button-quiet" data-action="pause">Ⅱ TẠM DỪNG</button><button class="button button-quiet" data-action="retry">↻ THỬ LẠI CHECKER</button><button class="button button-danger" data-action="reset">↻ RESET ĐIỂM</button><span id="action-result" aria-live="polite"></span></div>
+        <div class="admin-access" id="admin-team-info"></div>
+      </div>
+    </details>
+    <footer class="footer"><span>MEKODATACTF <b>·</b> CRYPTO RANGE</span><span>CVEs được mô phỏng cho mục tiêu huấn luyện an toàn.</span><a href="https://www.rfc-editor.org/info/rfc6979/" target="_blank" rel="noreferrer">RFC 6979 ↗</a></footer>
+  </main>
+</body>
+</html>

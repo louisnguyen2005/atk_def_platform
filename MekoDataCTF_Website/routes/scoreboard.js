@@ -6,6 +6,7 @@ const { sessionTeam } = require('../middlewares/auth');
 const origin = process.env.FORCAD_URL || 'http://127.0.0.1:18080';
 
 router.get('/scoreboard', (req,res) => {
+ if(process.env.CRYPTO_MODE === '1') return res.redirect(302,'/crypto/');
  // Đội đang đăng nhập (đội trưởng hoặc thành viên token): form nộp flag dùng token của đội này.
  const session = sessionTeam(req);
  const submitTeam = session ? {name:session.team.name, arenaKey:Team.forcadNameOf(session.team).toLowerCase()} : null;

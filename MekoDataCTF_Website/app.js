@@ -17,6 +17,7 @@ const { renderBody, formatDateTime } = require('./helpers/format');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (!process.env.SESSION_SECRET) {
@@ -62,6 +63,7 @@ app.use(expressLayouts);
 app.locals.renderBody = renderBody;
 app.locals.formatDateTime = formatDateTime;
 
+app.use('/', require('./routes/crypto'));
 app.use('/', require('./routes/scoreboard'));
 app.use('/', require('./routes/index'));
 app.use('/', require('./routes/auth'));
@@ -79,6 +81,6 @@ app.use((err, req, res, next) => {
   res.status(500).render('error', { title: '500', message: req.t ? req.t('errors.server') : 'Server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`MekoDataCTF đang chạy tại http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`MekoDataCTF đang chạy tại http://${HOST}:${PORT}`);
 });
