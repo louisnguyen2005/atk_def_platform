@@ -1,0 +1,23 @@
+/* Phần bổ sung cho dashboard.css: số service thay đổi theo lab, 4 thẻ luật điểm và các khung nhật ký. */
+.rules-grid{grid-template-columns:repeat(4,1fr)}
+.rules-grid .challenge-card{min-height:210px}
+.rules-grid .cve span{margin:0 8px 0 0;color:inherit;font-size:10px}
+.score-legend b{color:var(--ink);font-weight:600}
+.health-head,.health-row{grid-template-columns:minmax(80px,1.2fr) repeat(var(--svc,3),minmax(0,1fr))}
+.health-head span{overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.log-grid{grid-template-columns:1fr 1fr}
+.log-list{margin-top:16px;max-height:320px;overflow-y:auto}
+.log-tag{flex:none;min-width:58px;font:8px var(--mono);letter-spacing:.6px}
+.log-tag.hit,.log-tag.down{color:#f39992}
+.log-tag.block{color:var(--def)}
+.log-tag.sla{color:var(--teal)}
+.log-tag.info{color:#f1c87c}
+.log-list .capture-row{justify-content:flex-start}
+.log-list .capture-row time{margin-left:auto;flex:none}
+.submit-warn{margin:0 0 12px;padding:9px 11px;border:1px solid #603c3b;border-radius:5px;color:#edaa9a;font-size:11px}
+.submit-result{margin:12px 0 0;color:var(--teal);font:10px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word}
+.submit-result:empty{display:none}
+.team-panel a.button{display:inline-block;text-decoration:none}
+.warzone.disconnected #connection-dot{background:#f39992}
+@media(max-width:1000px){.rules-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.rules-grid,.log-grid{grid-template-columns:1fr}}

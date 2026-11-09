@@ -8,9 +8,11 @@ const origin = process.env.FORCAD_URL || 'http://127.0.0.1:18080';
 router.get('/scoreboard', (req,res) => {
  if(process.env.CRYPTO_MODE === '1') return res.redirect(302,'/crypto/');
  // Đội đang đăng nhập (đội trưởng hoặc thành viên token): form nộp flag dùng token của đội này.
+ // Trình duyệt khớp arenaKeys với danh sách đội ForcAD để khóa ô "Đội của bạn".
  const session = sessionTeam(req);
- const submitTeam = session ? {name:session.team.name, arenaKey:Team.forcadNameOf(session.team).toLowerCase()} : null;
- res.render('scoreboard',{title:'WORLD ARENA',worldGamePage:true,arenaMap,zodiac:arena.ZODIAC,submitTeam});
+ const forcadName = session ? Team.forcadNameOf(session.team) : '';
+ const submitTeam = session ? {name:session.team.name, arenaKeys:[forcadName.toLowerCase()], forcadName} : null;
+ res.render('scoreboard',{layout:false,title:'WORLD ARENA',worldGamePage:true,arenaMap,zodiac:arena.ZODIAC,submitTeam});
 });
 // Trạng thái gộp (điểm, đội + con giáp, service, capture, checker): SSE đẩy trực tiếp, JSON + ETag làm dự phòng.
 router.get('/scoreboard/stream', (req,res) => arena.subscribe(req,res));
@@ -27,7 +29,7 @@ for (const endpoint of ['tick-status','teams','arena']) {
    const defends = Array.isArray(data.defends) ? data.defends.slice(0,50).map(x => ({tick:x.tick,attacker:x.attacker,victim:x.victim,service:x.service,reason:x.reason,time:x.time})) : [];
    if (endpoint === 'arena') return res.json({services:data.services,captures:data.captures,checks:data.checks,defends});
    if (endpoint === 'teams') return res.json(data.map(t => ({id:t.id,name:t.name})));
-   return res.json({mode:data.mode,round:data.round,tick:data.tick,phase:data.phase,deadline:data.deadline,tick_seconds:data.tick_seconds,ticks_per_round:data.ticks_per_round,max_rounds:data.max_rounds,scores:data.scores,results:data.results,running:data.running,overall_tick:data.overall_tick});
+   return res.json({mode:data.mode,round:data.round,tick:data.tick,phase:data.phase,deadline:data.deadline,tick_seconds:data.tick_seconds,ticks_per_round:data.ticks_per_round,sla_max:data.sla_max,lab:data.lab,max_rounds:data.max_rounds,scores:data.scores,results:data.results,running:data.running,overall_tick:data.overall_tick});
   } catch (_) {res.status(503).json({error:'Scoreboard temporarily unavailable'});}
  });
 }

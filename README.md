@@ -17,3 +17,7 @@ Thư mục gốc chứa các dự án độc lập; mã của từng ứng dụn
 Các script dùng đường dẫn dựa trên vị trí file, không yêu cầu chạy từ thư mục gốc. Ví dụ: `python tools/rendering/verify_concrete_render.py` (cần StarUML API hoạt động tại `127.0.0.1:58321`). Một số script tạo mô hình còn cần file nguồn riêng từ máy tác giả; đường dẫn nguồn bên trong script cần được cấu hình khi chạy trên máy khác.
 
 Xem [`crypto-lab/README.md`](crypto-lab/README.md) để chạy demo Crypto A/D trên IP Wi-Fi hoặc tạo pool CyberRange mới cho hai đội.
+
+## Tích hợp hai round Web → Crypto
+
+Luồng hai round cho ForcAD và scoreboard MekoDataCTF được triển khai ở `ForcAD-demo/`, `MekoDataCTF_Website/`, `labs/crypto_ad/`, `shared/` và `ops/`. Crypto chạy trên các VM đội hiện hữu; ForcAD giữ nguyên cơ chế tính điểm và hiển thị điểm cộng dồn. Hướng dẫn cấu hình, cài đặt và chuyển round: [`docs/ROUND-2-CRYPTO.md`](docs/ROUND-2-CRYPTO.md).

@@ -1,157 +1,113 @@
-<% const m = arenaMap; const defaultTeams = [{ id: 1, name: 'Team01' }, { id: 2, name: 'Team02' }, { id: 3, name: 'Team03' }, { id: 4, name: 'Team04' }]; %>
-<link rel="stylesheet" href="/css/arena.css">
-<link rel="stylesheet" href="/css/world.css">
-<section class="arena war" data-arena>
- <header class="war-hud">
-  <div class="war-brand"><p class="arena-kicker">MEKODATACTF · ATTACK / DEFENSE</p><h1>World Arena</h1></div>
-  <div class="war-clock" aria-live="off"><span class="war-clock-label" data-banner-label>TICK — ENDS IN</span><strong data-timer>—</strong></div>
-  <dl class="war-stats">
-   <div><dt>Round</dt><dd data-stat-round>—</dd></div>
-   <div><dt>Tick</dt><dd data-tick>—</dd></div>
-   <div><dt>Service UP</dt><dd data-stat-up>—</dd></div>
-   <div><dt>Captures</dt><dd data-stat-captures>—</dd></div>
-  </dl>
- </header>
- <div class="war-ribbon"><span class="war-dot" aria-hidden="true"></span><span data-phase>—</span><span class="war-ribbon-note">· Bảng hiển thị tick đã chấm gần nhất</span><span class="war-live" data-live role="status">Đang kết nối…</span><button type="button" class="war-motion" data-motion aria-pressed="true">Hiệu ứng động: BẬT</button></div>
- <progress data-progress value="0" max="120" aria-label="Tiến độ tick"></progress>
+<!doctype html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>WORLD ARENA · ATTACK / DEFENSE</title>
+  <meta name="description" content="<%= t('site.tagline') %>">
+  <link rel="icon" href="/images/world.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Orbitron:wght@500;700;800;900&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/arena-ui/dashboard.css">
+  <link rel="stylesheet" href="/arena-ui/scoreboard.css">
+  <link rel="preload" as="image" href="/arena-ui/assets/space-bg.webp">
+  <script type="module" src="/arena-ui/arena3d/main.js?v=3"></script>
+  <%# scoreboard-ui.js phải gắn listener trước khi arena.js nhận trạng thái đầu tiên. %>
+  <script src="/js/scoreboard-ui.js" defer></script>
+  <script src="/js/arena.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Trang chủ MekoDataCTF"><span class="brand-mark">M<span>+</span></span><span class="brand-name">MEKO<span>DATA</span><small>CYBER RANGE</small></span></a>
+    <div class="event-label"><span class="live-dot"></span><span>ATTACK / DEFENSE</span><i></i><span>WORLD ARENA</span></div>
+    <a class="top-link" href="https://10.32.8.223/home" target="_blank" rel="noreferrer">CYBERRANGE <span>↗</span></a>
+  </header>
+  <main class="warzone" data-arena>
+    <section class="arena" id="arena" aria-label="Sân đấu tấn công và phòng thủ">
+      <canvas id="arena-canvas" aria-hidden="true"></canvas>
+      <div class="arena-hud">
+        <div class="hud-round"><span class="live-dot"></span><b data-phase>READY</b><small data-tick>—</small><b class="hud-timer" data-timer>--:--</b></div>
+        <div class="hud-plates" id="hud-plates"></div>
+        <div class="hud-feed" id="hud-feed" aria-live="polite"></div>
+      </div>
+    </section>
+    <progress data-progress value="0" max="120" hidden></progress>
 
- <svg class="arena-defs" width="0" height="0" aria-hidden="true" focusable="false">
-  <defs>
-   <radialGradient id="sh-grad"><stop offset=".55" stop-color="#7dffe0" stop-opacity="0"/><stop offset=".86" stop-color="#7dffe0" stop-opacity=".28"/><stop offset="1" stop-color="#e9fffa" stop-opacity=".75"/></radialGradient>
-   <symbol id="shield" viewBox="0 0 24 24"><path d="M12 2L21 6v7c0 5-9 9-9 9s-9-4-9-9V6z" fill="currentColor" fill-opacity=".25" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7.5 12l3 3 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
-  </defs>
- </svg>
+    <section class="score-section">
+      <div class="section-heading">
+        <div><div class="eyebrow"><span class="eyebrow-line"></span> LIVE STANDINGS</div><h2>Điểm tấn công &amp; phòng thủ</h2></div>
+        <div class="live-status"><span class="live-dot" id="connection-dot"></span><span data-live role="status">Đang kết nối…</span><span class="updated" data-updated>Chờ dữ liệu cuộc thi.</span></div>
+      </div>
+      <div class="table-wrap"><table class="score-table">
+        <thead><tr><th>#</th><th>ĐỘI</th><th>TỔNG ĐIỂM</th><th>ATTACK</th><th>DEFENSE</th><th>SLA</th></tr></thead>
+        <tbody data-ranking><tr><td colspan="6" class="loading">Đang tải điểm…</td></tr></tbody>
+      </table></div>
+      <div class="score-legend">
+        <span><i class="legend-a"></i> Round <b data-stat-round>—</b></span>
+        <span><i class="legend-s"></i> Service UP <b data-stat-up>—</b></span>
+        <span><i class="legend-d"></i> Captures <b data-stat-captures>—</b></span>
+        <span class="score-equation">Bảng hiển thị tick đã chấm gần nhất</span>
+      </div>
+    </section>
 
- <div class="world-layout">
-  <div class="world-map">
-   <span id="world-status" role="status"></span>
-   <div class="map-stage"
-        data-default-teams="<%= JSON.stringify(defaultTeams) %>"
-        data-slots="<%= JSON.stringify(m.SLOTS) %>"
-        data-lands="<%= JSON.stringify(m.LANDS) %>"
-        data-zodiac="<%= JSON.stringify(zodiac) %>">
-    <img class="map-terrain" src="/images/map/terrain-1920.jpg"
-         srcset="/images/map/terrain-1280.jpg 1280w, /images/map/terrain-1920.jpg 1920w, /images/map/terrain-2560.jpg 2560w, /images/map/terrain-3840.jpg 3840w"
-         sizes="(min-width: 1201px) calc(100vw - 470px), 100vw" width="1600" height="1000" alt="" decoding="async" fetchpriority="high">
-    <div class="map-sea" aria-hidden="true">
-     <div class="sea-waves"></div><div class="sea-waves sea-waves--b"></div>
-     <svg class="sea-sparkles" viewBox="0 0 <%= m.W %> <%= m.H %>" preserveAspectRatio="xMidYMid slice"><g id="sparkles"></g></svg>
-    </div>
-    <svg class="map-overlay" viewBox="0 0 <%= m.W %> <%= m.H %>" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="map-title">
-     <title id="map-title">Bản đồ quần đảo giả tưởng: mỗi đội giữ một vùng đất nhỏ, linh thú là một con giáp Việt Nam</title>
-     <defs><clipPath id="land-clip"><path d="<%= m.LAND_W %>"/><path d="<%= m.LAND_E %>"/></clipPath></defs>
-     <g id="outposts" class="outposts"></g>
-     <g id="territories" class="territories" clip-path="url(#land-clip)"></g>
-     <g class="radar" transform="translate(610 160)">
-      <circle r="58" fill="#06303a" fill-opacity=".55" stroke="#bafff0" stroke-opacity=".85" stroke-width="2"/>
-      <circle r="38" fill="none" stroke="#bafff0" stroke-opacity=".45"/><circle r="18" fill="none" stroke="#bafff0" stroke-opacity=".45"/>
-      <path d="M-58 0H58M0-58V58" stroke="#bafff0" stroke-opacity=".3"/>
-      <g class="radar-sweep"><path d="M0 0L58 0A58 58 0 0 0 41 -41Z" fill="#7dffd8" fill-opacity=".35"/></g>
-      <circle r="4" fill="#bafff0"/>
-      <text y="80" text-anchor="middle" class="map-label--server">GAMESERVER</text>
-     </g>
-     <g class="map-label">
-      <text x="760" y="200">THE PACKET SEA</text>
-      <text x="1090" y="100">OVERFLOW OCEAN</text>
-      <text x="598" y="640" transform="rotate(-82 598 640)">NULL STRAIT</text>
-      <text x="760" y="935">BAY OF BUFFERS</text>
-      <text x="1250" y="965">SEA OF SHELLS</text>
-      <text x="1040" y="612" class="map-label--lake">MOSS LAKE</text>
-     </g>
-     <g class="map-ticks" aria-hidden="true">
-      <% for (let i = 1; i < 16; i++) { %><text x="<%= i * 100 %>" y="22"><%= i %></text><% } %>
-      <% 'ABCDEFGHI'.split('').forEach(function (c, i) { %><text x="10" y="<%= (i + 1) * 100 + 5 %>"><%= c %></text><% }) %>
-     </g>
-     <g class="map-scale" transform="translate(40 965)"><path d="M0 0H120M0-6V6M60-5V5M120-6V6" stroke="#fff" stroke-width="2"/><text x="0" y="-11">0</text><text x="52" y="-11">50</text><text x="104" y="-11">100 KM</text></g>
-    </svg>
-    <div class="map-atmo" aria-hidden="true">
-     <div class="sun-glow"></div>
-     <div class="rays"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-     <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
-    </div>
-    <div class="map-bases" id="map-bases"></div>
-    <svg class="fx-svg" viewBox="0 0 <%= m.W %> <%= m.H %>" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-     <defs><filter id="fx-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-     <g id="fx-layer" class="fx-layer"></g>
-    </svg>
-   </div>
-   <p class="map-caption">Simulated effects only · Hiệu ứng mô phỏng theo dữ liệu đã chấm, không thể hiện đội nào đang thực sự tấn công đội nào</p>
-  </div>
+    <section class="challenge-section">
+      <div class="section-heading">
+        <div><div class="eyebrow"><span class="eyebrow-line"></span> SCORING RULES</div><h2>Luật điểm</h2></div>
+        <p class="section-note">Hiệu ứng trên sân đấu mô phỏng theo dữ liệu đã chấm từ ForcAD.</p>
+      </div>
+      <div class="challenge-grid rules-grid">
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">01</span><span class="tag tag-violet">ATTACK</span></div><h3>Tấn công trúng</h3><div class="cve"><span data-rule-attack>+1</span> <span data-rule-victim>−1</span></div><p>Mỗi flag hợp lệ lần đầu cộng 1 điểm đội tấn công và trừ 1 điểm đội mất flag. Nộp lại flag cũ không cộng thêm điểm.</p><div class="challenge-foot"><span class="vuln-dot"></span> FLAG BỊ CHIẾM</div></article>
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">02</span><span class="tag tag-amber">SLA</span></div><h3>Giữ dịch vụ</h3><div class="cve"><span data-rule-sla>+1</span></div><p>Đội nhận 1 điểm SLA nếu tất cả dịch vụ trong round hoạt động hết tick: 5 dịch vụ Web hoặc 3 dịch vụ Crypto.</p><div class="challenge-foot"><span class="vuln-dot"></span> TẤT CẢ DỊCH VỤ UP</div></article>
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">03</span><span class="tag tag-cyan">SERVICE DOWN</span></div><h3>Service down</h3><div class="cve"><span data-rule-down>SLA +0</span></div><p>Nếu có dịch vụ DOWN, đội không nhận điểm SLA của tick đó; không áp dụng điểm phạt DOWN riêng.</p><div class="challenge-foot"><span class="vuln-dot"></span> BỎ LỠ SLA</div></article>
+        <article class="challenge-card"><div class="challenge-top"><span class="task-index">04</span><span class="tag tag-violet">DEFENSE</span></div><h3>Phòng thủ</h3><div class="cve"><span>Không đổi điểm</span></div><p>Flag hết hạn, sai định dạng hoặc đã nộp rồi thì đòn tấn công bị khiên chặn.</p><div class="challenge-foot"><span class="vuln-dot"></span> ĐÒN BỊ CHẶN</div></article>
+      </div>
+    </section>
 
-  <aside class="war-side">
-   <div class="world-ranking arena-board">
-    <table>
-     <caption>Bảng xếp hạng trực tiếp</caption>
-     <thead><tr><th scope="col">Hạng</th><th scope="col">Đội</th><th scope="col">Tổng</th><th scope="col">SLA</th><th scope="col">Attack</th><th scope="col">Defense</th></tr></thead>
-     <tbody data-ranking><tr><td colspan="6">Đang tải điểm…</td></tr></tbody>
-    </table>
-   </div>
-   <section class="war-roster" aria-labelledby="roster-title">
-    <h2 id="roster-title">Linh thú 12 con giáp</h2>
-    <ul id="world-roster"></ul>
-   </section>
-   <section class="war-rules" aria-labelledby="rules-title">
-    <h2 id="rules-title">Luật điểm</h2>
-    <ul>
-     <li><span class="lg lg-hit" aria-hidden="true"></span><b>Tấn công trúng:</b> mỗi flag của một lỗ hổng <em data-rule-attack>+100</em> cho đội tấn công, đội bị chiếm flag <em class="neg" data-rule-victim>−100</em>.</li>
-     <li><span class="lg lg-sla" aria-hidden="true"></span><b>SLA:</b> giữ dịch vụ qua hết một tick <em data-rule-sla>+100</em> · bật khiên.</li>
-     <li><span class="lg lg-down" aria-hidden="true"></span><b>Service down:</b> mỗi tick bị trừ <em class="neg" data-rule-down>100 × (số đội còn lại)</em>.</li>
-     <li><span class="lg lg-block" aria-hidden="true"></span><b>Phòng thủ:</b> flag hết hạn, sai định dạng hoặc đã nộp rồi → đạn bị khiên chặn, không đổi điểm.</li>
-    </ul>
-    <p class="arena-note">Số nổi trên căn cứ là biến động thật lấy từ ForcAD giữa hai lần cập nhật.</p>
-   </section>
-  </aside>
- </div>
- <p data-updated class="arena-note">Chờ dữ liệu cuộc thi.</p>
+    <section class="lower-grid">
+      <article class="panel team-panel">
+        <div class="panel-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> PLAYER CONSOLE</div><h2 id="submit-title">Nộp flag</h2></div><span class="panel-badge">TEAM ACCESS</span></div>
+        <% if (submitTeam) { %>
+        <p class="panel-copy">Nộp với tư cách đội <b><%= submitTeam.name %></b> · máy chủ dùng token của đội đang đăng nhập để cộng điểm.</p>
+        <p id="submit-unlinked" class="submit-warn" role="alert" hidden>Đội của bạn chưa được ghép với đội nào trên ForcAD (cần đội ForcAD tên <b><%= submitTeam.forcadName || '—' %></b>). Flag sẽ không được cộng điểm cho tới khi BTC tạo đội và đồng bộ token. Hãy liên hệ BTC.</p>
+        <form id="world-submit" data-my-teams="<%= JSON.stringify(submitTeam.arenaKeys) %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label for="flag-input">Flag <span>mỗi dòng một flag</span></label>
+          <textarea id="flag-input" name="flags" rows="3" required spellcheck="false" placeholder="Dán flag vào đây"></textarea>
+          <label for="fx-attacker">Đội của bạn <span>hiệu ứng trên sân đấu, không gửi lên ForcAD</span></label>
+          <select id="fx-attacker" disabled title="Cố định theo đội đang đăng nhập"><option value="">—</option></select>
+          <label for="fx-victim">Đội mục tiêu <span>tùy chọn</span></label>
+          <select id="fx-victim"><option value="">—</option></select>
+          <div class="form-foot"><button class="button button-primary" type="submit">GỬI FLAG <span>↗</span></button><button class="button button-quiet" type="reset">XÓA FLAG</button></div>
+        </form>
+        <pre id="world-submit-result" class="submit-result" role="status"></pre>
+        <% } else { %>
+        <p class="panel-copy">Đăng nhập để nộp flag: đội trưởng dùng email, thành viên dùng token đội.</p>
+        <a class="button button-primary" href="/login?next=/scoreboard">ĐĂNG NHẬP <span>↗</span></a>
+        <% } %>
+      </article>
+      <article class="panel operations-panel">
+        <div class="panel-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> DEFENSE MONITOR</div><h2>Trạng thái service</h2></div><span class="panel-badge"><span class="live-dot"></span> LAST CHECK</span></div>
+        <div class="health-table"><div class="health-head" id="health-head"><span>ĐỘI</span></div><div id="health-rows"><div class="health-empty">Chờ dữ liệu checker…</div></div></div>
+        <div class="capture-head"><span>GẦN ĐÂY BỊ CHIẾM FLAG</span><span class="capture-live">LIVE</span></div>
+        <div id="capture-feed" class="capture-feed"><div class="feed-empty">Chưa có flag bị chiếm.</div></div>
+      </article>
+    </section>
 
- <div class="world-bottom">
-  <section><h2>Nhật ký chiến trường</h2><div id="world-feed" role="log" aria-live="polite">Chờ dữ liệu capture…</div></section>
-  <section><h2>Checker chronicle</h2><details><summary>Trạng thái gần nhất theo service <span id="world-services"></span></summary><div id="world-service-details"></div></details><div id="world-checks">Chờ dữ liệu checker…</div></section>
- </div>
+    <section class="lower-grid log-grid">
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> BATTLE LOG</div><h2>Nhật ký chiến trường</h2></div></div>
+        <div id="world-feed" class="log-list" role="log" aria-live="polite"><div class="feed-empty">Chờ dữ liệu capture…</div></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> CHECKER</div><h2>Checker chronicle</h2></div></div>
+        <div id="world-checks" class="log-list"><div class="feed-empty">Chờ dữ liệu checker…</div></div>
+      </article>
+    </section>
 
- <section class="world-submit" aria-labelledby="submit-title">
-  <h2 id="submit-title">Nộp flag</h2>
-  <% if (submitTeam) { %>
-  <p class="submit-as">Nộp với tư cách đội <b><%= submitTeam.name %></b> · máy chủ dùng token của đội đang đăng nhập để cộng điểm.</p>
-  <form id="world-submit" data-my-team="<%= submitTeam.arenaKey %>">
-   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-   <label>Flag (mỗi dòng một flag)<textarea name="flags" required rows="3"></textarea></label>
-   <fieldset class="submit-fx">
-    <legend>Hiệu ứng trên bản đồ (tùy chọn, không gửi lên ForcAD)</legend>
-    <label>Đội của bạn <select id="fx-attacker"><option value="">—</option></select></label>
-    <label>Đội mục tiêu <select id="fx-victim"><option value="">—</option></select></label>
-   </fieldset>
-   <button type="submit">Nộp flag</button><button type="reset">Xóa flag</button>
-  </form>
-  <pre id="world-submit-result" role="status"></pre>
-  <% } else { %>
-  <p class="submit-as">Đăng nhập để nộp flag: đội trưởng dùng email, thành viên dùng token đội. <a href="/login?next=/scoreboard">Đăng nhập</a></p>
-  <% } %>
- </section>
- <p class="arena-note credits">Ảnh 12 con giáp: Microsoft Fluent Emoji 3D (giấy phép MIT).</p>
-</section>
-
-<template id="base-template">
- <article tabindex="0" class="map-base">
-  <div class="base-emblem">
-   <span class="base-pad" aria-hidden="true"></span>
-   <span class="z-shadow" aria-hidden="true"></span>
-   <div class="z-actor"><div class="z-facing"><div class="z-idle"><img class="z-img" alt="" draggable="false" decoding="async"></div></div></div>
-   <svg class="base-shield" viewBox="-64 -64 128 128" aria-hidden="true">
-    <circle class="sh-bubble" r="58"/>
-    <g class="sh-spin"><path class="sh-hex" d="M0-50L43.3-25V25L0 50-43.3 25V-25Z"/></g>
-    <g class="sh-spin2"><circle class="sh-ring" r="44"/></g>
-    <circle class="sh-rim" r="58"/>
-    <use class="sh-badge" href="#shield" x="-13" y="-72" width="26" height="26"/>
-   </svg>
-   <span class="base-crown" aria-hidden="true">♛</span>
-   <span class="base-smoke" aria-hidden="true"><i></i><i></i><i></i></span>
-   <span class="z-confetti" aria-hidden="true"></span>
-  </div>
-  <div class="base-plate"><h2></h2><strong data-base-score>—</strong><span data-base-rank>#—</span></div>
-  <p class="base-badge" data-base-status>CHƯA CÓ DỮ LIỆU</p>
-  <div class="base-floats" aria-hidden="true"></div>
- </article>
-</template>
-<script src="/js/arena.js" defer></script>
-<script src="/js/world.js" defer></script>
+    <footer class="footer"><span>MEKODATACTF <b>·</b> WORLD ARENA</span><span>Hiệu ứng mô phỏng theo dữ liệu đã chấm, không thể hiện đội nào đang thực sự tấn công đội nào.</span><a href="/">TRANG CHỦ ↗</a></footer>
+  </main>
+</body>
+</html>

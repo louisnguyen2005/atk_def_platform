@@ -1,0 +1,22 @@
+[Unit]
+Description=MekoDataCTF Crypto A/D controller and scoreboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=crypto-controller
+Group=crypto-controller
+WorkingDirectory=/opt/crypto-lab
+ExecStart=/usr/bin/python3 /opt/crypto-lab/controller.py --config /etc/crypto-lab/controller.json
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/crypto-lab
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

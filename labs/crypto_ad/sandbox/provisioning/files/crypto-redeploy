@@ -1,0 +1,60 @@
+#!/usr/bin/python3
+"""Flip the reference patch for this VM's crypto services, then restart them.
+
+Usage: sudo /usr/local/sbin/crypto-redeploy <team> PATCHED=0|1 [service|all]
+
+The team argument must match /etc/crypto-lab/owner, the root-owned file naming
+the team this VM belongs to, so the helper can only ever touch its own services.
+Players may also edit /opt/crypto-lab/<team>/service.py and restart one unit.
+"""
+import grp
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+SERVICES = ('curveball', 'padding_oracle', 'ecdsa_nonce')
+OWNER = Path('/etc/crypto-lab/owner')
+GROUP = 'crypto-defenders'
+
+
+def fail(message):
+    raise SystemExit('crypto-redeploy: ' + message)
+
+
+def main():
+    arguments = sys.argv[1:]
+    if not 2 <= len(arguments) <= 3:
+        fail('usage: crypto-redeploy <team> PATCHED=0|1 [service|all]')
+    team, mode = arguments[0], arguments[1]
+    target = arguments[2] if len(arguments) == 3 else 'all'
+
+    try:
+        owner = json.loads(OWNER.read_text(encoding='utf-8'))['team']
+    except (OSError, ValueError, KeyError):
+        fail(f'{OWNER} is missing or unreadable; the sandbox is not provisioned')
+    if team != owner:
+        fail(f'this VM hosts {owner}, not {team}')
+    if mode not in ('PATCHED=0', 'PATCHED=1'):
+        fail('the mode must be exactly PATCHED=0 or PATCHED=1')
+    if target not in SERVICES + ('all',):
+        fail('the service must be one of ' + ', '.join(SERVICES + ('all',)))
+
+    group_id = grp.getgrnam(GROUP).gr_gid
+    chosen = SERVICES if target == 'all' else (target,)
+    for service in chosen:
+        path = Path('/etc/crypto-lab') / f'{team}-{service}.env'
+        # O_NOFOLLOW: never write through a symlink planted in /etc/crypto-lab.
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o640)
+        with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+            handle.write(mode + '\n')
+        os.chown(path, 0, group_id)
+        os.chmod(path, 0o640)
+    for service in chosen:
+        subprocess.run(['/usr/bin/systemctl', 'restart', f'crypto-lab@{team}-{service}.service'], check=True)
+    print(f"{mode} applied to {', '.join(chosen)}")
+
+
+if __name__ == '__main__':
+    main()

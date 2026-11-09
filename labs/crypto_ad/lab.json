@@ -1,0 +1,21 @@
+{
+  "name": "crypto_ad",
+  "ssh_config": "ops/pool139/management-config",
+  "checker_host": "checker",
+  "tasks": [
+    "curveball",
+    "padding_oracle",
+    "ecdsa_nonce"
+  ],
+  "task_ports": {
+    "curveball": 9011,
+    "padding_oracle": 9012,
+    "ecdsa_nonce": 9013
+  },
+  "ticks": 15,
+  "tick_seconds": 120,
+  "flag_ttl": 2,
+  "shared_with": "meko_boutique",
+  "agent_command": "sudo -n /usr/bin/python3 /opt/crypto-checker/agent.py --config /etc/crypto-checker/config.json",
+  "agent_timeout": 35
+}

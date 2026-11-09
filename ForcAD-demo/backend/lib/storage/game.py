@@ -102,13 +102,25 @@ def get_current_game_config() -> models.GameConfig:
     return game_config
 
 
+def scoreboard_tasks():
+    """Include completed web services in totals while only crypto is scheduled."""
+    from . import round1, lab_profile
+    if round1.configured():
+        lifecycle = round1.state()
+        if lifecycle['round_number'] == 2:
+            prefixes = tuple(lab_profile.get(name)['prefix'] for name in
+                             (lifecycle['lab'], lifecycle['first_lab']))
+            return [task for task in storage.tasks.get_all_tasks() if task.checker.startswith(prefixes)]
+    return storage.tasks.get_tasks()
+
+
 def construct_game_state_from_db(current_round: int) -> models.GameState:
     """Get game state for specified round with teamtasks from db."""
     teamtasks = storage.tasks.get_teamtasks_from_db()
     teamtasks = storage.tasks.filter_teamtasks_for_participants(teamtasks)
 
     team_ids = {team.id for team in storage.teams.get_teams()}
-    task_ids = {task.id for task in storage.tasks.get_tasks()}
+    task_ids = {task.id for task in scoreboard_tasks()}
 
     teamtasks = list(filter(
         lambda tt: tt['team_id'] in team_ids and tt['task_id'] in task_ids,
@@ -154,7 +166,7 @@ def construct_scoreboard() -> dict:
     """
 
     teams = [team.to_dict_for_participants() for team in storage.teams.get_teams()]
-    tasks = [task.to_dict_for_participants() for task in storage.tasks.get_tasks()]
+    tasks = [task.to_dict_for_participants() for task in scoreboard_tasks()]
     cfg = storage.game.get_current_game_config().to_dict()
 
     state = get_cached_game_state()

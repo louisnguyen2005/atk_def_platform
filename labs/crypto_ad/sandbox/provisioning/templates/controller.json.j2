@@ -1,0 +1,32 @@
+{#- Controller configuration: roster, timing and every token the checker needs. -#}
+{
+  "bind_host": "0.0.0.0",
+  "public_host": "{{ crypto_checker_ip }}",
+  "http_port": {{ crypto_scoreboard_port | int }},
+  "database": "/var/lib/crypto-lab/scoreboard.sqlite",
+  "demo": false,
+  "ticks": {{ crypto_ticks | int }},
+  "tick_seconds": {{ crypto_tick_seconds | int }},
+  "flag_ttl": {{ crypto_flag_ttl | int }},
+  "admin_token": {{ crypto_tokens.admin | to_json }},
+  "checker_tokens": {
+{% for team in crypto_teams | dictsort | map('first') %}
+    {{ team | to_json }}: {{ crypto_tokens.checker_tokens[team] | to_json }}{{ "," if not loop.last }}
+{% endfor %}
+  },
+  "teams": [
+{% for team, address in crypto_teams | dictsort %}
+    {
+      "id": {{ team | to_json }},
+      "name": {{ crypto_team_labels[team] | default(team) | to_json }},
+      "host": {{ address | to_json }},
+      "token": {{ crypto_tokens.team_tokens[team] | to_json }},
+      "ports": {
+{% for service, port in crypto_services | dictsort %}
+        {{ service | to_json }}: {{ port | int }}{{ "," if not loop.last }}
+{% endfor %}
+      }
+    }{{ "," if not loop.last }}
+{% endfor %}
+  ]
+}

@@ -69,12 +69,12 @@ async function load() {
   scores.forEach(s => { if (!known.has(String(s.name).toLowerCase())) known.set(String(s.name).toLowerCase(), { id: s.team_id, name: s.name }); });
   return {
     ok: true,
-    game: pick(tick, ['mode', 'round', 'tick', 'phase', 'deadline', 'tick_seconds', 'ticks_per_round', 'max_rounds', 'running', 'overall_tick']),
+    game: pick(tick, ['mode', 'lab', 'round', 'tick', 'phase', 'deadline', 'tick_seconds', 'ticks_per_round', 'sla_max', 'max_rounds', 'running', 'overall_tick']),
     scores,
     teams: withZodiac([...known.values()]),
     services: list(arena.services).map(s => pick(s, ['team', 'service', 'status'])),
     captures: list(arena.captures).slice(0, 50).map(c => pick(c, ['tick', 'attacker', 'attacker_id', 'victim', 'victim_id', 'capture_flag_id', 'service', 'submit_time'])),
-    checks: list(arena.checks).slice(0, 60).map(c => pick(c, ['tick', 'team', 'status', 'points'])),
+    checks: list(arena.checks).slice(0, 60).map(c => pick(c, ['round', 'tick', 'overall_tick', 'team', 'status', 'points'])),
     defends: list(arena.defends).slice(0, 50).map(x => pick(x, ['tick', 'attacker', 'victim', 'service', 'reason', 'time'])),
   };
 }

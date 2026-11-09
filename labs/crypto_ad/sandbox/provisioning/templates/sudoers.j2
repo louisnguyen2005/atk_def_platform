@@ -1,0 +1,14 @@
+{#- The trainee may restart only their own three services and flip only their own
+    patch mode. Every other sudo command stays denied. -#}
+{% set commands = [] %}
+{% for service in crypto_services | dictsort | map('first') %}
+{%   set _ = commands.append('/usr/bin/systemctl restart crypto-lab@' ~ team ~ '-' ~ service ~ '.service') %}
+{%   set _ = commands.append('/usr/bin/systemctl status crypto-lab@' ~ team ~ '-' ~ service ~ '.service') %}
+{% endfor %}
+{% for mode in ['0', '1'] %}
+{%   set _ = commands.append('/usr/local/sbin/crypto-redeploy ' ~ team ~ ' PATCHED=' ~ mode) %}
+{%   for target in ['all'] + (crypto_services | dictsort | map('first') | list) %}
+{%     set _ = commands.append('/usr/local/sbin/crypto-redeploy ' ~ team ~ ' PATCHED=' ~ mode ~ ' ' ~ target) %}
+{%   endfor %}
+{% endfor %}
+user-access ALL=(root) NOPASSWD: {{ commands | join(', ') }}

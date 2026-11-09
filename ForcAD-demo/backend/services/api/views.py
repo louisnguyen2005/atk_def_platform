@@ -14,7 +14,7 @@ def get_teams():
 
 @client_bp.route('/tasks/')
 def get_tasks():
-    tasks = [task.to_dict_for_participants() for task in storage.tasks.get_tasks()]
+    tasks = [task.to_dict_for_participants() for task in storage.game.scoreboard_tasks()]
 
     return jsonify(tasks)
 
@@ -55,13 +55,17 @@ def health_check():
 
 @client_bp.route('/tick-status/')
 def tick_status():
-    from lib.storage import round1
+    from lib.storage import round1, lab_profile, round_control
     if round1.configured():
         s = round1.state()
-        return jsonify({'mode': 'round1', 'round': 1, 'tick': s['tick'],
+        return jsonify({'mode': 'round1', 'lab': s['lab'], 'round': s['round_number'], 'tick': s['tick'],
+                        'overall_tick': s['tick'] + s['tick_offset'],
+                        'running': round_control.get_enabled(),
                         'phase': s['phase'], 'deadline': s['deadline'], 'error': s['error'],
                         'tick_seconds': storage.game.get_current_game_config().round_time,
-                        'max_rounds': 2, 'ticks_per_round': 15, 'scores': round1.scores()})
+                        'max_rounds': 2, 'ticks_per_round': round1.profile()['ticks_per_round'],
+                        'sla_max': round1.profile()['ticks_per_round'] + (lab_profile.get(s['first_lab'])['ticks_per_round'] if s['round_number'] == 2 else 0),
+                        'scores': round1.scores()})
     with storage.utils.db_cursor() as (_, curs):
         curs.execute('SELECT real_round FROM GameConfig WHERE id=1')
         tick = curs.fetchone()[0]
@@ -88,6 +92,10 @@ def public_arena_data():
         captures=[dict(r) for r in c.fetchall()]
         c.execute("SELECT l.team_id,t.name AS team,l.tick,l.status,l.points FROM MekodataSLA l JOIN Teams t ON t.id=l.team_id ORDER BY l.tick DESC,t.name LIMIT 120")
         checks=[dict(r) for r in c.fetchall()]
+    from lib.storage import round1
+    if round1.configured():
+        round1.annotate_ticks(captures)
+        round1.annotate_ticks(checks)
     response=jsonify({'services':services,'captures':captures,'checks':checks})
     response.headers['Cache-Control']='no-store'
     return response

@@ -9,21 +9,37 @@ def round_control_status():
     check_session()
     round_control.ensure_table()
     from lib.storage import round1
-    return jsonify({'running': round_control.get_enabled(), 'round1': round1.state()})
+    return jsonify({'running': round_control.get_enabled(), 'round1': round1.state(),
+                    'ticks_per_round': round1.profile()['ticks_per_round']})
 
 
 def round1_prepare():
     check_session()
     if request.headers.get('Origin') != request.host_url.rstrip('/'):
         abort_with_error('Invalid origin', 403)
-    if (request.get_json(silent=True) or {}).get('confirm') != 'PREPARE ROUND1':
+    data = request.get_json(silent=True) or {}
+    if data.get('confirm') != 'PREPARE ROUND1':
         abort_with_error('Preparation confirmation required', 400)
     from lib.storage import round1
     try:
-        round1.prepare()
+        round1.prepare(data.get('lab', 'round1'))
     except ValueError as exc:
         abort_with_error(str(exc), 409)
     return jsonify({'status': 'prepared', 'running': False})
+
+
+def round2_prepare():
+    check_session()
+    if request.headers.get('Origin') != request.host_url.rstrip('/'):
+        abort_with_error('Invalid origin', 403)
+    if (request.get_json(silent=True) or {}).get('confirm') != 'NEXT ROUND':
+        abort_with_error('Round transition confirmation required', 400)
+    from lib.storage import round1
+    try:
+        round1.next_round()
+    except ValueError as exc:
+        abort_with_error(str(exc), 409)
+    return jsonify({'status': 'prepared', 'round': 2, 'running': False})
 
 
 def round1_archive():
@@ -38,6 +54,20 @@ def round1_archive():
     except ValueError as exc:
         abort_with_error(str(exc), 409)
     return jsonify({'status': 'archived', 'archive_id': archive_id})
+
+
+def round1_restart():
+    check_session()
+    if request.headers.get('Origin') != request.host_url.rstrip('/'):
+        abort_with_error('Invalid origin', 403)
+    if (request.get_json(silent=True) or {}).get('confirm') != 'RESTART ROUND1':
+        abort_with_error('Restart confirmation required', 400)
+    from lib.storage import round1
+    try:
+        archive_id = round1.restart_competition()
+    except ValueError as exc:
+        abort_with_error(str(exc), 409)
+    return jsonify({'status': 'ready', 'archive_id': archive_id, 'round': 0, 'running': False})
 
 
 def round1_archive_download(archive_id):
@@ -107,6 +137,10 @@ def arena_data():
         captures=[dict(r) for r in c.fetchall()]
         c.execute("SELECT l.team_id,t.name AS team,l.tick,l.status,l.points FROM MekodataSLA l JOIN Teams t ON t.id=l.team_id ORDER BY l.tick DESC,t.name LIMIT 120")
         checks=[dict(r) for r in c.fetchall()]
+    from lib.storage import round1
+    if round1.configured():
+        round1.annotate_ticks(captures)
+        round1.annotate_ticks(checks)
     response=jsonify({'services':services,'captures':captures,'checks':checks})
     response.headers['Cache-Control']='no-store'
     return response

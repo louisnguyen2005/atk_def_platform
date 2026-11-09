@@ -1,7 +1,7 @@
 // Nguồn dữ liệu trực tiếp của World Arena + bảng xếp hạng + đồng hồ tick.
 // Ưu tiên Server-Sent Events (/scoreboard/stream): máy chủ đẩy trạng thái ngay khi đổi.
 // Nếu trình duyệt/mạng không giữ được SSE thì chuyển sang AJAX /scoreboard/state với ETag (304 khi không đổi).
-// Mỗi trạng thái mới phát sự kiện 'arena-state' cho world.js.
+// Mỗi trạng thái mới phát sự kiện 'arena-state' cho scoreboard-ui.js.
 (() => {
 'use strict';
 const root = document.querySelector('[data-arena]');
@@ -33,14 +33,15 @@ function placeholder(text) {
   body.replaceChildren();
   const cell = body.insertRow().insertCell();
   cell.colSpan = 6;
+  cell.className = 'loading';
   cell.textContent = text;
   rankingKey = '';
 }
 
 function timer() {
   const el = get('[data-timer]'), game = state?.game;
-  if (!game || !connected) { el.textContent = '—'; el.classList.remove('urgent'); return; }
-  if (!['running', 'draining'].includes(game.phase) || !game.deadline) { el.textContent = labels[game.phase] || '—'; el.classList.remove('urgent'); return; }
+  if (!game || !connected) { el.textContent = '--:--'; el.classList.remove('urgent'); return; }
+  if (!['running', 'draining'].includes(game.phase) || !game.deadline) { el.textContent = '--:--'; el.classList.remove('urgent'); return; }
   const left = Math.max(0, Math.ceil(game.deadline - serverNow()));
   el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
   el.classList.toggle('urgent', left <= 20);
@@ -52,7 +53,7 @@ function timer() {
 function renderRanking() {
   const game = state.game || {}, body = get('[data-ranking]');
   get('[data-phase]').textContent = game.mode === 'round1' ? (labels[game.phase] || game.phase || '—') : 'READY';
-  get('[data-tick]').textContent = game.mode === 'round1' ? `${game.tick ?? '—'}/${game.ticks_per_round ?? '—'}` : '—';
+  get('[data-tick]').textContent = game.mode === 'round1' ? `T${game.tick ?? '—'}/${game.ticks_per_round ?? '—'}` : '—';
   get('[data-updated]').textContent = 'Cập nhật lúc ' + new Date().toLocaleTimeString('vi-VN');
   if (game.mode !== 'round1') {
     if (rankingKey === 'idle') return;
@@ -71,12 +72,19 @@ function renderRanking() {
     const tr = document.createElement('tr');
     tr.classList.toggle('leader', rank === 1);
     if (previous.has(team.team_id) && previous.get(team.team_id) !== team.total) tr.classList.add('changed');
-    [rank, team.name, team.total, `${team.sla} / ${game.ticks_per_round}`, team.attack, team.defense].forEach((v, index) => {
+    const signed = n => (n > 0 ? '+' : '') + n;
+    const cell = (text, tag, className) => {
       const td = document.createElement('td');
-      td.textContent = String(v);
-      if (index === 5 && team.defense < 0) td.className = 'negative';
+      if (tag) { const el = document.createElement(tag); el.className = className; el.textContent = String(text); td.append(el); }
+      else td.textContent = String(text);
       tr.append(td);
-    });
+    };
+    cell(rank);
+    cell(team.name, 'span', 'team-name');
+    cell(team.total, 'b', 'total-score');
+    cell(signed(team.attack), 'span', team.attack < 0 ? 'score-neg' : 'score-pos');
+    cell(signed(team.defense), 'span', team.defense < 0 ? 'score-neg' : 'score-pos');
+    cell(`${team.sla} / ${game.sla_max ?? game.ticks_per_round}`, 'span', 'score-sla');
     fragment.append(tr);
     previous.set(team.team_id, team.total);
   });

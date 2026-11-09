@@ -11,6 +11,10 @@ config_backup*.yml
 checkers/*
 !checkers/requirements.txt
 !checkers/round1/
+!checkers/crypto_ad/
+!checkers/meko_boutique/
+checkers/crypto_ad/rpc/
+checkers/meko_boutique/rpc/
 checkers/round1/rpc/
 
 *.env

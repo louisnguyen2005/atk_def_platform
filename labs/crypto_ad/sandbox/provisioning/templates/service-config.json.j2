@@ -1,0 +1,8 @@
+{#- One team VM's service configuration. admin_token is this team's checker token. -#}
+{
+  "team": {{ team | to_json }},
+  "bind_host": {{ crypto_teams[team] | to_json }},
+  "data_dir": "/var/lib/crypto-lab",
+  "admin_token": {{ crypto_tokens.checker_tokens[team] | to_json }},
+  "patched": "{{ '1' if crypto_start_patched | bool else '0' }}"
+}

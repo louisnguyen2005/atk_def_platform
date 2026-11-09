@@ -1,0 +1,21 @@
+This machine: {{ team }} ({{ crypto_teams[team] }})
+
+Every team runs the same three services. Connect with ncat and send one JSON
+object per line, for example: {"op":"info"}
+
+{% for name, address in crypto_teams | dictsort %}
+{{ '%-7s' | format(name) }}{{ ' (you)' if name == team else '      ' }}  {% for service, port in crypto_services | dictsort %}{{ service }} -> ncat {{ address }} {{ port }}{{ '   ' if not loop.last }}{% endfor %}
+
+{% endfor %}
+Scoreboard:      http://{{ crypto_checker_ip }}:{{ crypto_scoreboard_port }}/
+Your source:     /opt/crypto-lab/{{ team }}/service.py  (editable, group crypto-defenders)
+Reference copy:  ~/crypto-lab/src/      Hints: ~/crypto-lab/hints/
+
+Enable the sample patch on all three services:
+  sudo /usr/local/sbin/crypto-redeploy {{ team }} PATCHED=1
+Patch one service only:
+  sudo /usr/local/sbin/crypto-redeploy {{ team }} PATCHED=1 curveball
+Back to the vulnerable build:
+  sudo /usr/local/sbin/crypto-redeploy {{ team }} PATCHED=0
+Restart a service you edited yourself:
+  sudo /usr/bin/systemctl restart crypto-lab@{{ team }}-curveball.service

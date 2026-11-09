@@ -1,0 +1,38 @@
+# Facts of the crypto A/D topology. Keep these in step with ../topology.yml and
+# ../../lab.json; CyberRange and Ansible read this file directly.
+#
+# No secret lives here. Team tokens, the organizer key and the SSH passwords are
+# minted once on the checker VM by files/make_tokens.py and stay in the
+# root-owned /etc/crypto-lab/tokens.json on that VM.
+
+crypto_network: 10.81.0.0/24
+crypto_checker_ip: 10.81.0.30
+crypto_scoreboard_port: 8088
+
+# Team VM identity -> address on crypto-lan. The key is the systemd instance
+# prefix, the Ansible inventory name and the controller team id, all at once.
+crypto_teams:
+  team1: 10.81.0.11
+  team2: 10.81.0.12
+  team3: 10.81.0.13
+
+# Human-facing names shown on the scoreboard until the website syncs the real
+# registered team names over the admin API.
+crypto_team_labels:
+  team1: Team 01
+  team2: Team 02
+  team3: Team 03
+
+crypto_services:
+  curveball: 9011
+  padding_oracle: 9012
+  ecdsa_nonce: 9013
+
+# Match length. 15 ticks of 120 seconds is 30 minutes of play; a flag stays
+# worth points in the tick that placed it and the two ticks after it.
+crypto_ticks: 15
+crypto_tick_seconds: 120
+crypto_flag_ttl: 2
+
+# Start every service in the vulnerable state so the lab has something to patch.
+crypto_start_patched: false

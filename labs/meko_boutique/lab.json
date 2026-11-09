@@ -1,0 +1,13 @@
+{
+  "name": "meko_boutique",
+  "ssh_config": "ops/pool139/management-config",
+  "checker_host": "checker",
+  "agent_command": "sudo -n /usr/bin/python3 /opt/meko-checker/agent.py --config /etc/meko-checker/config.json",
+  "agent_timeout": 35,
+  "tasks": ["idor", "sqli", "upload", "jwt", "backup"],
+  "teams": [
+    {"name": "team1", "ip": "10.90.0.11"},
+    {"name": "team2", "ip": "10.90.0.12"},
+    {"name": "team3", "ip": "10.90.0.13"}
+  ]
+}

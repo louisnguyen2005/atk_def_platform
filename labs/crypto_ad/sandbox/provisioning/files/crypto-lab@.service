@@ -1,0 +1,25 @@
+[Unit]
+Description=MekoDataCTF educational crypto service %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=user-access
+Group=crypto-defenders
+WorkingDirectory=/opt/crypto-lab
+# "%i" is "<team>-<service>"; systemd passes the team part through to the config path.
+EnvironmentFile=/etc/crypto-lab/%i.env
+ExecStart=/usr/bin/python3 /opt/crypto-lab/launcher.py %i
+Restart=on-failure
+RestartSec=2
+UMask=0007
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/var/lib/crypto-lab
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

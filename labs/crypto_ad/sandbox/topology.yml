@@ -1,0 +1,62 @@
+name: mekodata-crypto-ad-three-teams
+
+hosts:
+  - name: team1
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: standard.small
+  - name: team2
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: standard.small
+  - name: team3
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: standard.small
+  - name: checker
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: standard.small
+
+routers:
+  - name: gateway
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: standard.small
+
+wan:
+  name: internet-connection
+  cidr: 100.100.100.0/24
+
+networks:
+  - name: crypto-lan
+    cidr: 10.81.0.0/24
+    accessible_by_user: true
+
+net_mappings:
+  - host: team1
+    network: crypto-lan
+    ip: 10.81.0.11
+  - host: team2
+    network: crypto-lan
+    ip: 10.81.0.12
+  - host: team3
+    network: crypto-lan
+    ip: 10.81.0.13
+  - host: checker
+    network: crypto-lan
+    ip: 10.81.0.30
+
+router_mappings:
+  - router: gateway
+    network: crypto-lan
+    ip: 10.81.0.1
+
+groups:
+  - name: teams
+    nodes: [team1, team2, team3]

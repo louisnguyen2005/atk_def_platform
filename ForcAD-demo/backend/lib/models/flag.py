@@ -40,7 +40,8 @@ class Flag(BaseModel):
 
     @classmethod
     def generate(
-            cls, service: str, team_id: int, task_id: int, current_round: int
+            cls, service: str, team_id: int, task_id: int, current_round: int,
+            template: str = 'MekoDataCTF{{{body}}}',
     ) -> 'Flag':
         """
         Generate a new flag.
@@ -49,11 +50,12 @@ class Flag(BaseModel):
         :param team_id: team id
         :param task_id: task id
         :param current_round: current round
+        :param template: flag format with {letter} and {body} placeholders
         :return: Flag model instance
         """
         service_letter = service[0].upper()
         rnd_data = ''.join(secrets.choice(ALPHABET) for _ in range(30))
-        flag_text = service_letter + rnd_data + '='
+        flag_text = template.format(letter=service_letter, body=rnd_data, hexbody=secrets.token_hex(16))
 
         return cls(
             id=None,

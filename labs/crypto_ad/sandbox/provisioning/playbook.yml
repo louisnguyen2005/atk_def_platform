@@ -1,0 +1,456 @@
+---
+# Crypto A/D sandbox. Three team VMs each run the same three deliberately
+# vulnerable line-JSON services; the checker VM runs the controller that places
+# flags, checks the services, scores the match and serves the scoreboard.
+#
+# No secret is stored in this repository. The organizer key, the per-team
+# checker tokens, the team submission tokens and the console passwords are
+# minted once on the checker VM by files/make_tokens.py, so re-running this
+# playbook against a live sandbox keeps every token that was already issued.
+
+- name: Mint the match secrets on the checker VM
+  hosts: checker
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Require the sandbox identity CyberRange provides
+      ansible.builtin.assert:
+        that:
+          - global_sandbox_id is defined
+          - global_sandbox_id | length == 36
+        fail_msg: CyberRange did not provide global_sandbox_id.
+
+    - name: Install the Python runtime the secret generator needs
+      ansible.builtin.apt:
+        name: [python3]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create the configuration directory
+      ansible.builtin.file:
+        path: /etc/crypto-lab
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Create or reuse the organizer key, checker tokens, team tokens and passwords
+      ansible.builtin.script:
+        cmd: 'files/make_tokens.py --teams {{ crypto_teams | dictsort | map("first") | join(",") }}'
+        executable: /usr/bin/python3
+      register: crypto_token_output
+      changed_when: false
+      no_log: true
+
+    - name: Keep the secrets available to the plays that follow
+      ansible.builtin.set_fact:
+        crypto_tokens: '{{ crypto_token_output.stdout | from_json }}'
+      no_log: true
+
+    - name: Require one secret of each kind for every team
+      ansible.builtin.assert:
+        that:
+          - crypto_tokens.admin | length >= 16
+          - crypto_tokens.team_tokens.keys() | sort == crypto_teams.keys() | sort
+          - crypto_tokens.checker_tokens.keys() | sort == crypto_teams.keys() | sort
+          - crypto_tokens.ssh_passwords.keys() | sort == crypto_teams.keys() | sort
+        fail_msg: make_tokens.py did not return one secret per declared team.
+
+- name: Run the three crypto services on each team VM
+  hosts: teams
+  become: true
+  gather_facts: true
+  vars:
+    team: '{{ inventory_hostname }}'
+    crypto_tokens: "{{ hostvars['checker'].crypto_tokens }}"
+    user_access_username: user-access
+    user_access_password: "{{ hostvars['checker'].crypto_tokens.ssh_passwords[inventory_hostname] }}"
+    user_access_shell: /bin/bash
+    user_access_sudo: false
+    user_access_ssh_public_key: '{{ global_ssh_public_user_key }}'
+  pre_tasks:
+    - name: Require this host to be a declared team
+      ansible.builtin.assert:
+        that:
+          - inventory_hostname in crypto_teams
+          - global_ssh_public_user_key is defined
+          - global_ssh_public_user_key | length > 0
+        fail_msg: '{{ inventory_hostname }} is not listed in crypto_teams.'
+
+    - name: Install the service runtime, crypto libraries and player tools
+      ansible.builtin.apt:
+        name:
+          - python3
+          - python3-ecdsa
+          - python3-pycryptodome
+          - ncat
+          - openssh-server
+          - sudo
+          - curl
+          - iputils-ping
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create the defender group that owns the editable source tree
+      ansible.builtin.group:
+        name: crypto-defenders
+        system: true
+  roles:
+    - role: user-access
+      no_log: true
+  tasks:
+    - name: Put the trainee account in the defender group
+      ansible.builtin.user:
+        name: user-access
+        groups: crypto-defenders
+        append: true
+        shell: /bin/bash
+        expires: -1
+        password_expire_max: -1
+
+    - name: Load SSH drop-ins before the image defaults
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        line: 'Include /etc/ssh/sshd_config.d/*.conf'
+        insertbefore: BOF
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Reload team SSH
+
+    - name: Let players reach their own VM with the team password or their key
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/60-crypto-lab.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          Match User user-access
+              PasswordAuthentication yes
+              PubkeyAuthentication yes
+              AuthenticationMethods any
+              AllowTcpForwarding yes
+          Match all
+      notify: Reload team SSH
+
+    - name: Create the source tree, configuration and state directories
+      ansible.builtin.file:
+        path: '{{ item.path }}'
+        state: directory
+        owner: '{{ item.owner }}'
+        group: '{{ item.group }}'
+        mode: '{{ item.mode }}'
+      loop:
+        - { path: /opt/crypto-lab, owner: root, group: crypto-defenders, mode: '0755' }
+        - { path: '/opt/crypto-lab/{{ team }}', owner: user-access, group: crypto-defenders, mode: '2775' }
+        - { path: '/opt/crypto-lab/{{ team }}/hints', owner: user-access, group: crypto-defenders, mode: '2775' }
+        - { path: /etc/crypto-lab, owner: root, group: crypto-defenders, mode: '0750' }
+        - { path: '/etc/crypto-lab/{{ team }}', owner: root, group: crypto-defenders, mode: '0750' }
+        - { path: /var/lib/crypto-lab, owner: user-access, group: crypto-defenders, mode: '2770' }
+        - { path: /home/user-access/crypto-lab/src, owner: user-access, group: user-access, mode: '0755' }
+        - { path: /home/user-access/crypto-lab/hints, owner: user-access, group: user-access, mode: '0755' }
+
+    - name: Install the service the team may read and edit
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../app/{{ item }}'
+        dest: '/opt/crypto-lab/{{ team }}/{{ item }}'
+        owner: user-access
+        group: crypto-defenders
+        mode: '0664'
+      loop: [service.py, protocol.py]
+      notify: Restart team crypto services
+
+    - name: Install the launcher only root may change
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../app/launcher.py'
+        dest: /opt/crypto-lab/launcher.py
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart team crypto services
+
+    - name: Install the hints beside the editable source
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../hints/'
+        dest: '/opt/crypto-lab/{{ team }}/hints/'
+        owner: user-access
+        group: crypto-defenders
+        mode: '0664'
+
+    - name: Record which team owns this VM, for the patch-mode helper
+      ansible.builtin.copy:
+        dest: /etc/crypto-lab/owner
+        owner: root
+        group: root
+        mode: '0644'
+        content: '{{ dict(team=team, sandbox_uuid=global_sandbox_id, node=inventory_hostname) | to_nice_json }}'
+
+    - name: Store the service configuration and this team's checker token
+      ansible.builtin.template:
+        src: service-config.json.j2
+        dest: '/etc/crypto-lab/{{ team }}/config.json'
+        owner: root
+        group: crypto-defenders
+        mode: '0640'
+      no_log: true
+      notify: Restart team crypto services
+
+    - name: Set the starting patch mode once, without overwriting a team's choice
+      ansible.builtin.copy:
+        dest: '/etc/crypto-lab/{{ team }}-{{ item }}.env'
+        owner: root
+        group: crypto-defenders
+        mode: '0640'
+        content: "PATCHED={{ '1' if crypto_start_patched | bool else '0' }}\n"
+        force: false
+      loop: '{{ crypto_services | dictsort | map("first") | list }}'
+
+    - name: Install the systemd template that runs the three services
+      ansible.builtin.copy:
+        src: 'crypto-lab@.service'
+        dest: '/etc/systemd/system/crypto-lab@.service'
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart team crypto services
+
+    - name: Install the patch-mode helper
+      ansible.builtin.copy:
+        src: crypto-redeploy
+        dest: /usr/local/sbin/crypto-redeploy
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Give the trainee sudo for exactly their own services and nothing else
+      ansible.builtin.template:
+        src: sudoers.j2
+        dest: '/etc/sudoers.d/crypto-lab-{{ team }}'
+        owner: root
+        group: root
+        mode: '0440'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Publish a read-only reference copy of the source
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../app/{{ item }}'
+        dest: '/home/user-access/crypto-lab/src/{{ item }}'
+        owner: user-access
+        group: user-access
+        mode: '0444'
+      loop: [service.py, protocol.py]
+
+    - name: Publish the hints in the trainee home directory
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../hints/'
+        dest: /home/user-access/crypto-lab/hints/
+        owner: user-access
+        group: user-access
+        mode: '0444'
+
+    - name: Write the address list and the patch commands for the trainee
+      ansible.builtin.template:
+        src: lab-addresses.txt.j2
+        dest: /home/user-access/lab-addresses.txt
+        owner: user-access
+        group: user-access
+        mode: '0644'
+
+    - name: Start the three services and enable them on boot
+      ansible.builtin.systemd_service:
+        name: 'crypto-lab@{{ team }}-{{ item }}.service'
+        daemon_reload: true
+        enabled: true
+        state: started
+      loop: '{{ crypto_services | dictsort | map("first") | list }}'
+
+    - ansible.builtin.meta: flush_handlers
+
+    - name: Require each service to answer line-JSON on its own port
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          printf '{"op":"info"}\n' | ncat -w 5 {{ crypto_teams[team] }} {{ item.value }}
+        executable: /bin/bash
+      register: crypto_service_probe
+      changed_when: false
+      until: (crypto_service_probe.stdout | trim | from_json).service | default('') == item.key
+      retries: 10
+      delay: 3
+      loop: '{{ crypto_services | dict2items }}'
+  handlers:
+    - name: Reload team SSH
+      ansible.builtin.service:
+        name: ssh
+        enabled: true
+        state: reloaded
+    - name: Restart team crypto services
+      ansible.builtin.systemd_service:
+        name: 'crypto-lab@{{ inventory_hostname }}-{{ item }}.service'
+        daemon_reload: true
+        state: restarted
+      loop: '{{ crypto_services | dictsort | map("first") | list }}'
+
+- name: Run the controller and the scoreboard on the checker VM
+  hosts: checker
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Install the controller runtime
+      ansible.builtin.apt:
+        name: [python3, python3-ecdsa, python3-pycryptodome, ncat, curl, iputils-ping]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create the controller service account
+      ansible.builtin.user:
+        name: crypto-controller
+        system: true
+        home: /var/lib/crypto-lab
+        create_home: false
+        shell: /usr/sbin/nologin
+
+    - name: Create the controller directories
+      ansible.builtin.file:
+        path: '{{ item.path }}'
+        state: directory
+        owner: '{{ item.owner }}'
+        group: '{{ item.group }}'
+        mode: '{{ item.mode }}'
+      loop:
+        - { path: /opt/crypto-lab, owner: root, group: root, mode: '0755' }
+        - { path: /etc/crypto-lab, owner: root, group: crypto-controller, mode: '0750' }
+        - { path: /var/lib/crypto-lab, owner: crypto-controller, group: crypto-controller, mode: '0750' }
+
+    - name: Install the controller and the shared protocol helper
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../app/{{ item }}'
+        dest: '/opt/crypto-lab/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [controller.py, protocol.py]
+      notify: Restart the crypto scoreboard
+
+    - name: Install the scoreboard front end, including the offline Three.js build
+      ansible.builtin.copy:
+        src: '{{ playbook_dir }}/../app/dashboard/'
+        dest: /opt/crypto-lab/dashboard/
+        owner: root
+        group: root
+        mode: '0644'
+        directory_mode: '0755'
+      notify: Restart the crypto scoreboard
+
+    - name: Store the controller configuration, the roster and every token
+      ansible.builtin.template:
+        src: controller.json.j2
+        dest: /etc/crypto-lab/controller.json
+        owner: root
+        group: crypto-controller
+        mode: '0640'
+      no_log: true
+      notify: Restart the crypto scoreboard
+
+    - name: Install the scoreboard service unit
+      ansible.builtin.copy:
+        src: crypto-ad-scoreboard.service
+        dest: /etc/systemd/system/crypto-ad-scoreboard.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart the crypto scoreboard
+
+    - name: Start the scoreboard and enable it on boot
+      ansible.builtin.systemd_service:
+        name: crypto-ad-scoreboard
+        daemon_reload: true
+        enabled: true
+        state: started
+
+    - ansible.builtin.meta: flush_handlers
+
+    - name: Require the scoreboard HTTP API to answer
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:{{ crypto_scoreboard_port }}/api/state'
+        use_proxy: false
+        return_content: true
+      register: crypto_state
+      until: crypto_state.status | default(0) == 200 and crypto_state.json.ok | default(false)
+      retries: 10
+      delay: 3
+
+    - name: Require the controller to know every team
+      ansible.builtin.assert:
+        that:
+          - crypto_state.json.teams | map(attribute='id') | sort == crypto_teams.keys() | sort
+        fail_msg: The controller roster does not match crypto_teams.
+
+    - name: Write the organizer handover notes, readable only by root
+      ansible.builtin.copy:
+        dest: /root/crypto-ad-handover.txt
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          MekoDataCTF Crypto A/D — sandbox {{ global_sandbox_id }}
+
+          Scoreboard: http://{{ crypto_checker_ip }}:{{ crypto_scoreboard_port }}/
+          Organizer key (Bearer): {{ crypto_tokens.admin }}
+
+          Team console logins (username user-access):
+          {% for team, address in crypto_teams | dictsort %}
+            {{ team }}  ssh user-access@{{ address }}  password: {{ crypto_tokens.ssh_passwords[team] }}
+          {% endfor %}
+
+          Team submission tokens (the website overrides these names and tokens
+          through POST /api/admin/team-sync once the real teams register):
+          {% for team, address in crypto_teams | dictsort %}
+            {{ team }}  {{ crypto_tokens.team_tokens[team] }}
+          {% endfor %}
+
+          Every token above is also in /etc/crypto-lab/tokens.json on this VM.
+      no_log: true
+  handlers:
+    - name: Restart the crypto scoreboard
+      ansible.builtin.systemd_service:
+        name: crypto-ad-scoreboard
+        daemon_reload: true
+        state: restarted
+
+- name: Verify the match network from the checker and between the team VMs
+  hosts: checker
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Reach every service on every team VM from the checker
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          printf '{"op":"info"}\n' | ncat -w 5 {{ item[0].value }} {{ item[1].value }}
+        executable: /bin/bash
+      register: crypto_reach
+      changed_when: false
+      until: (crypto_reach.stdout | trim | from_json).service | default('') == item[1].key
+      retries: 5
+      delay: 3
+      loop: '{{ crypto_teams | dict2items | product(crypto_services | dict2items) | list }}'
+      loop_control:
+        label: '{{ item[0].key }}/{{ item[1].key }}'
+
+- name: Verify every team VM can attack every other team VM
+  hosts: teams
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Reach the curveball port of every other team
+      ansible.builtin.wait_for:
+        host: '{{ item.value }}'
+        port: '{{ crypto_services.curveball }}'
+        state: started
+        timeout: 20
+      loop: '{{ crypto_teams | dict2items }}'
+      when: item.key != inventory_hostname
+      loop_control:
+        label: '{{ item.key }}'

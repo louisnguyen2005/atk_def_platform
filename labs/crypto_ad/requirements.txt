@@ -1,0 +1,4 @@
+ecdsa==0.19.1
+pycryptodome==3.23.0
+paramiko==4.0.0
+PyYAML==6.0.3
